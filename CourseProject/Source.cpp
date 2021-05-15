@@ -8,6 +8,7 @@
 
 #include "Renderer.h"
 #include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
 #include "VertexArray.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
@@ -67,13 +68,8 @@ int main(void)
 			2, 3, 0
 		};
 
-		unsigned int vao;
-
-		glGenVertexArrays(1, &vao);
-		glBindVertexArray(vao);
-
 		VertexArray va;
-		VertexBuffer vb(positions, sizeof(float) * 4 * 2);
+		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
 
 		VertexBufferLayout layout;
 		layout.Push<float>(2);
@@ -90,25 +86,21 @@ int main(void)
 		vb.Unbind();
 		ib.Unbind();
 
-		color col = { 0.5, 1, 0 ,1 };
-		float increment = 0.005;
+		Renderer renderer;
+
+		color col = { 0.5, 0.8, 0.3, 1 };
+		float increment = 0.005f;
 		/* Loop until the user closes the window */
 		while (!glfwWindowShouldClose(window))
 		{
-			glClear(GL_COLOR_BUFFER_BIT);
-
 			/* Render here */
-			glClear(GL_COLOR_BUFFER_BIT);
+			renderer.Clear();
 
 			shader.Bind();
-
 			if (col.R > 1 || col.R < 0) increment *= -1;
-			shader.SetUniform4f("u_Color", col.R += increment, col.G += increment, col.B, col.A);
+			shader.SetUniform4f("u_Color", col.R += increment, col.G, col.B, col.A);
 
-			ib.Bind();
-			va.Bind();
-
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+			renderer.Draw(va, ib, shader);
 
 			glEnd();
 			/* Swap front and back buffers */

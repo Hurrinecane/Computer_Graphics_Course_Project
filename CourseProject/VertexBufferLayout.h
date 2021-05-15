@@ -14,7 +14,7 @@ struct VertexBufferElement
 		{
 		case GL_FLOAT:			return sizeof(GLfloat);
 		case GL_UNSIGNED_BYTE:	return sizeof(GLbyte);
-		case GL_UNSIGNED_INT:	return sizeof(GLuint);			
+		case GL_UNSIGNED_INT:	return sizeof(GLuint);
 		}
 		ASSERT(false);
 		return 0;
@@ -44,9 +44,7 @@ public:
 	{
 		m_Elements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE });
 		m_Stride += VertexBufferElement::GetSizeOfType(GL_UNSIGNED_INT) * count;
-
 	}
-
 
 	template<>
 	void Push<unsigned char>(unsigned int count)
@@ -55,18 +53,12 @@ public:
 		m_Stride += VertexBufferElement::GetSizeOfType(GL_UNSIGNED_BYTE) * count;
 	}
 
-	inline const std::vector <VertexBufferElement> GetElements() const
-	{
-		return m_Elements;
-	}
-	inline unsigned int GetStride() const
-	{
-		return m_Stride;
-	}
+	inline const std::vector <VertexBufferElement> GetElements() const { return m_Elements; }
+
+	inline unsigned int GetStride() const { return m_Stride; }
 
 private:
 	std::vector<VertexBufferElement> m_Elements;
 
 	unsigned int m_Stride;
 };
-

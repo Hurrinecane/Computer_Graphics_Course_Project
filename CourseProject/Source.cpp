@@ -92,7 +92,7 @@ int main()
 	Renderer renderer;
 
 	
-	color col = { 0.5, 0.8, 0.3, 1 };
+	color col = { 0.5f, 0.8f, 0.3f, 1.f };
 	float increment = 0.005f;
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))

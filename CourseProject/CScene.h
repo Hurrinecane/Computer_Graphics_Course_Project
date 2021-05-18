@@ -6,6 +6,13 @@
 class CScene
 {
 public:
+
+	enum {
+		step = 8,
+		numberOfVertices = ((180 / step) + 1) * ((360 / step) + 1),
+		numberOfIndices = 2 * (numberOfVertices - (360 / step) - 1)
+	}; // enum
+
 	CScene(void)
 	{
 		/// вычисляем вершины сферы и заносим их в массив
@@ -105,13 +112,6 @@ private:
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, clr);
 		glLightfv(GL_LIGHT0, GL_SPECULAR, clr);
 	} // InitLights
-
-
-    enum {
-        step = 8,
-        numberOfVertices = ((180 / step) + 1) * ((360 / step) + 1),
-        numberOfIndices = 2 * (numberOfVertices - (360 / step) - 1)
-    }; // enum
 
     struct 
     {

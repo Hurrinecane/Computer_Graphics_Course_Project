@@ -91,16 +91,12 @@ int main()
 
 	Renderer renderer;
 
-	//CScene scene;
-	//scene.Init(640, 480);
-	//scene.DrawEarth();
-
+	
 	color col = { 0.5, 0.8, 0.3, 1 };
 	float increment = 0.005f;
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
 	{
-		//scene.Redraw();
 		/* Render here */
 		renderer.Clear();
 		shader.Bind();

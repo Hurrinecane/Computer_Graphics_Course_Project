@@ -28,9 +28,7 @@ struct ModelTransform
 
 struct Color {
 	float r, g, b, a;
-};
-
-Color background = { 0.f, 0.f, 0.f, 1.f };
+} background = { 0.f, 0.f, 0.f, 1.f };
 
 struct Material
 {

@@ -12,11 +12,11 @@
 #include "VertexArray.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
+#include "CScene.h"
 
 using std::cout;
 using std::endl;
 using std::string;
-
 
 struct color
 {
@@ -26,8 +26,10 @@ struct color
 	float A;
 };
 
-int main(void)
+int main()
 {
+#pragma region Init and window creation
+
 	GLFWwindow* window;
 
 	/* Initialize the library */
@@ -55,62 +57,67 @@ int main(void)
 		return -1;
 
 	cout << glGetString(GL_VERSION) << endl;
+#pragma endregion
+
+	float positions[] = {
+		-0.5f, -0.5f,	//0
+		 0.5f, -0.5f,	//1
+		 0.5f,  0.5f,	//2
+		-0.5f,  0.5f,	//3
+	};
+
+	unsigned int indeces[] = {
+		0, 1, 2,
+		2, 3, 0
+	};
+
+	VertexArray va;
+	VertexBuffer vb(positions, 4 * 2 * sizeof(float));
+
+	VertexBufferLayout layout;
+	layout.Push<float>(2);
+	va.AddBuffer(vb, layout);
+
+	IndexBuffer ib(indeces, 6);
+
+	Shader shader("res/shaders/Basic.shader");
+	shader.Bind();
+	shader.SetUniform4f("u_Color", 0.2f, 0.3f, 0.8f, 1.0f);
+
+	va.Unbind();
+	shader.Unbind();
+	vb.Unbind();
+	ib.Unbind();
+
+	Renderer renderer;
+
+	//CScene scene;
+	//scene.Init(640, 480);
+	//scene.DrawEarth();
+
+	color col = { 0.5, 0.8, 0.3, 1 };
+	float increment = 0.005f;
+	/* Loop until the user closes the window */
+	while (!glfwWindowShouldClose(window))
 	{
-		float positions[] = {
-			-0.5f, -0.5f,	//0
-			 0.5f, -0.5f,	//1
-			 0.5f,  0.5f,	//2
-			-0.5f,  0.5f,	//3
-		};
-
-		unsigned int indeces[] = {
-			0, 1, 2,
-			2, 3, 0
-		};
-
-		VertexArray va;
-		VertexBuffer vb(positions, 4 * 2 * sizeof(float));
-
-		VertexBufferLayout layout;
-		layout.Push<float>(2);
-		va.AddBuffer(vb, layout);
-
-		IndexBuffer ib(indeces, 6);
-
-		Shader shader("res/shaders/Basic.shader");
+		//scene.Redraw();
+		/* Render here */
+		renderer.Clear();
 		shader.Bind();
-		shader.SetUniform4f("u_Color", 0.2f, 0.3f, 0.8f, 1.0f);
+		if (col.R > 1 || col.R < 0) increment *= -1;
+		shader.SetUniform4f("u_Color", col.R += increment, col.G, col.B, col.A);
 
-		va.Unbind();
-		shader.Unbind();
-		vb.Unbind();
-		ib.Unbind();
+		renderer.Draw(va, ib, shader);
 
-		Renderer renderer;
+		glEnd();
+		/* Swap front and back buffers */
+		glfwSwapBuffers(window);
 
-		color col = { 0.5, 0.8, 0.3, 1 };
-		float increment = 0.005f;
-		/* Loop until the user closes the window */
-		while (!glfwWindowShouldClose(window))
-		{
-			/* Render here */
-			renderer.Clear();
-
-			shader.Bind();
-			if (col.R > 1 || col.R < 0) increment *= -1;
-			shader.SetUniform4f("u_Color", col.R += increment, col.G, col.B, col.A);
-
-			renderer.Draw(va, ib, shader);
-
-			glEnd();
-			/* Swap front and back buffers */
-			glfwSwapBuffers(window);
-
-			/* Poll for and process events */
-			glfwPollEvents();
-		}
-		shader.Unbind();
+		/* Poll for and process events */
+		glfwPollEvents();
 	}
+	shader.Unbind();
+
 
 	glfwTerminate();
 	return 0;

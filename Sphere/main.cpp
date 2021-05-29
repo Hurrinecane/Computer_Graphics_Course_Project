@@ -766,12 +766,7 @@ void displayCB()
     matrixModelCommon.rotateY(cameraAngleY);
     matrixModelCommon.rotateX(cameraAngleX);
 
-    // model matrix for each instance
-    //Matrix4 matrixModel1(matrixModelCommon);    // left
-    Matrix4 matrixModel2(matrixModelCommon);    // center
-    //Matrix4 matrixModel3(matrixModelCommon);    // right
-    //matrixModel1.translate(-2.5f, 0, 0);        // shift left
-    //matrixModel3.translate(2.5f, 0, 0);         // shift right
+     Matrix4 matrixModel2(matrixModelCommon);    // center
 
     // bind GLSL, texture
     glUseProgram(progId);
@@ -786,30 +781,6 @@ void displayCB()
     glBindBuffer(GL_ARRAY_BUFFER, vboId1);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId1);
 
-    // set attrib arrays using glVertexAttribPointer()
-    //int stride = sphere1.getInterleavedStride();
-    //glVertexAttribPointer(attribVertexPosition, 3, GL_FLOAT, false, stride, 0);
-    //glVertexAttribPointer(attribVertexNormal, 3, GL_FLOAT, false, stride, (void*)(3 * sizeof(float)));
-    //glVertexAttribPointer(attribVertexTexCoord, 2, GL_FLOAT, false, stride, (void*)(6 * sizeof(float)));
-
-    // set model matrix uniforms
-    //matrixModelView = matrixView * matrixModel1;
-    Matrix4 matrixModelViewProjection = matrixProjection * matrixModelView;
-    Matrix4 matrixNormal = matrixModelView;
-    //matrixNormal.setColumn(3, Vector4(0,0,0,1));
-    //glUniformMatrix4fv(uniformMatrixModelView, 1, false, matrixModelView.get());
-    //glUniformMatrix4fv(uniformMatrixModelViewProjection, 1, false, matrixModelViewProjection.get());
-    //glUniformMatrix4fv(uniformMatrixNormal, 1, false, matrixNormal.get());
-
-    // left and center spheres do not use texture
-    glUniform1i(uniformTextureUsed, 0);
-
-    // draw left sphere
-    //glDrawElements(GL_TRIANGLES,            // primitive type
-    //               sphere1.getIndexCount(), // # of indices
-    //               GL_UNSIGNED_INT,         // data type
-    //               (void*)0);               // ptr to indices
-
     // bind vbo for smooth sphere (center and right)
     glBindBuffer(GL_ARRAY_BUFFER, vboId2);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId2);
@@ -820,25 +791,10 @@ void displayCB()
     glVertexAttribPointer(attribVertexNormal, 3, GL_FLOAT, false, stride, (void*)(3 * sizeof(float)));
     glVertexAttribPointer(attribVertexTexCoord, 2, GL_FLOAT, false, stride, (void*)(6 * sizeof(float)));
 
-    // set matrix uniforms for center sphere
-    //matrixModelView = matrixView * matrixModel2;
-    //matrixModelViewProjection = matrixProjection * matrixModelView;
-    //matrixNormal = matrixModelView;
-    //matrixNormal.setColumn(3, Vector4(0,0,0,1));
-    //glUniformMatrix4fv(uniformMatrixModelView, 1, false, matrixModelView.get());
-    //glUniformMatrix4fv(uniformMatrixModelViewProjection, 1, false, matrixModelViewProjection.get());
-    //glUniformMatrix4fv(uniformMatrixNormal, 1, false, matrixNormal.get());
-
-    // draw center sphere
-    //glDrawElements(GL_TRIANGLES,            // primitive type
-    //               sphere2.getIndexCount(), // # of indices
-    //               GL_UNSIGNED_INT,         // data type
-    //               (void*)0);               // ptr to indices
-
     // set matric uniforms for right sphere
     matrixModelView = matrixView * matrixModel2;
-    matrixModelViewProjection = matrixProjection * matrixModelView;
-    matrixNormal = matrixModelView;
+    Matrix4 matrixModelViewProjection = matrixProjection * matrixModelView;
+    Matrix4 matrixNormal = matrixModelView;
     matrixNormal.setColumn(3, Vector4(0,0,0,1));
     glUniformMatrix4fv(uniformMatrixModelView, 1, false, matrixModelView.get());
     glUniformMatrix4fv(uniformMatrixModelViewProjection, 1, false, matrixModelViewProjection.get());

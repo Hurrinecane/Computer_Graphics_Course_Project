@@ -76,9 +76,9 @@ void processInput(GLFWwindow* win, double dt)
 
 	uint32_t dir = 0;
 
-	if (glfwGetKey(win, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
+	if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		dir |= CAM_UP;
-	if (glfwGetKey(win, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
+	if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 		dir |= CAM_DOWN;
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
 		dir |= CAM_FORWARD;
@@ -307,9 +307,9 @@ int main()
 
 	Shader* polygon_shader = new Shader("shaders\\basic.vert", "shaders\\basic.frag");
 	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
-	Shader* backpack_shader = new Shader("shaders\\backpack.vert", "shaders\\backpack.frag");
+	Shader* earth_shader = new Shader("shaders\\backpack.vert", "shaders\\backpack.frag");
 
-	Model backpack("models/backpack/backpack.obj", false);
+	Model earth("models/Earth/earth.obj", true);
 	
 	float max = 0;
 
@@ -456,24 +456,24 @@ int main()
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
-		// DRAWING BACKPACK
+		// DRAWING EARTH
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-		backpack_shader->use();
-		backpack_shader->setMatrix4F("pv", pv);
-		backpack_shader->setMatrix4F("model", model);
-		backpack_shader->setFloat("shininess", 64.0f);
-		backpack_shader->setVec3("viewPos", camera.Position);
+		earth_shader->use();
+		earth_shader->setMatrix4F("pv", pv);
+		earth_shader->setMatrix4F("model", model);
+		earth_shader->setFloat("shininess", 64.0f);
+		earth_shader->setVec3("viewPos", camera.Position);
 
 		active_lights = 0;
 		for (int i = 0; i < lights.size(); i++)
 		{
-			active_lights += lights[i]->putInShader(backpack_shader, active_lights);
+			active_lights += lights[i]->putInShader(earth_shader, active_lights);
 		}
-		backpack_shader->setInt("lights_count", active_lights);
+		earth_shader->setInt("lights_count", active_lights);
 
-		backpack.Draw(backpack_shader);
+		earth.Draw(earth_shader);
 	
 		glfwSwapBuffers(win);
 		glfwPollEvents();

@@ -307,9 +307,9 @@ int main()
 
 	Shader* polygon_shader = new Shader("shaders\\basic.vert", "shaders\\basic.frag");
 	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
-	Shader* backpack_shader = new Shader("shaders\\backpack.vert", "shaders\\backpack.frag");
+	Shader* earth_shader = new Shader("shaders\\backpack.vert", "shaders\\backpack.frag");
 
-	Model backpack("models/backpack/backpack.obj", false);
+	Model earth("models/earth/earth.obj", true);
 	
 	float max = 0;
 
@@ -460,20 +460,20 @@ int main()
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-		backpack_shader->use();
-		backpack_shader->setMatrix4F("pv", pv);
-		backpack_shader->setMatrix4F("model", model);
-		backpack_shader->setFloat("shininess", 64.0f);
-		backpack_shader->setVec3("viewPos", camera.Position);
+		earth_shader->use();
+		earth_shader->setMatrix4F("pv", pv);
+		earth_shader->setMatrix4F("model", model);
+		earth_shader->setFloat("shininess", 64.0f);
+		earth_shader->setVec3("viewPos", camera.Position);
 
 		active_lights = 0;
 		for (int i = 0; i < lights.size(); i++)
 		{
-			active_lights += lights[i]->putInShader(backpack_shader, active_lights);
+			active_lights += lights[i]->putInShader(earth_shader, active_lights);
 		}
-		backpack_shader->setInt("lights_count", active_lights);
+		earth_shader->setInt("lights_count", active_lights);
 
-		backpack.Draw(backpack_shader);
+		earth.Draw(earth_shader);
 	
 		glfwSwapBuffers(win);
 		glfwPollEvents();

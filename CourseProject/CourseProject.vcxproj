@@ -69,7 +69,14 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ExecutablePath>D:\Google Drive\University\6 семестр\Компьютерная графика\CourseProject\CourseProject\Dependencies\include;$(ExecutablePath)</ExecutablePath>
+    <LibraryPath>D:\Google Drive\University\6 семестр\Компьютерная графика\CourseProject\CourseProject\Dependencies\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ExecutablePath>D:\Google Drive\University\6 семестр\Компьютерная графика\CourseProject\CourseProject\Dependencies\include;$(ExecutablePath)</ExecutablePath>
+    <LibraryPath>D:\Google Drive\University\6 семестр\Компьютерная графика\CourseProject\CourseProject\Dependencies\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>

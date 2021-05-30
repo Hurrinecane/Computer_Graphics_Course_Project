@@ -14,7 +14,7 @@ class Model
 {
 public:
     vector<Texture> textures_loaded;
-    vector<Mesh>    meshes;
+    vector<Mesh> meshes;
     string directory;
     bool gammaCorrection;
 

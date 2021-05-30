@@ -46,7 +46,7 @@ struct Material
 	float shininess;
 };
 
-Camera camera(glm::vec3(0.2f, 0.2f, 0.5f), glm::vec3(0.f, 1.0f, 0.f), 243.051, -20.7);
+Camera camera(glm::vec3(0.183165, -0.0376139, 0.031249), glm::vec3(0.f, 1.0f, 0.f), 243.051, -20.7);
 
 void OnResize(GLFWwindow* win, int width, int height)
 {
@@ -76,9 +76,9 @@ void processInput(GLFWwindow* win, double dt)
 
 	uint32_t dir = 0;
 
-	if (glfwGetKey(win, GLFW_KEY_SPACE) == GLFW_PRESS)
+	if (glfwGetKey(win, GLFW_KEY_PAGE_UP) == GLFW_PRESS)
 		dir |= CAM_UP;
-	if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+	if (glfwGetKey(win, GLFW_KEY_PAGE_DOWN) == GLFW_PRESS)
 		dir |= CAM_DOWN;
 	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
 		dir |= CAM_FORWARD;
@@ -98,9 +98,7 @@ void processInput(GLFWwindow* win, double dt)
 	y = newy;
 
 	camera.Move(dir, dt);
-
-	if (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) != GLFW_RELEASE)
-		camera.Rotate(xoffset, -yoffset);
+	camera.Rotate(xoffset, -yoffset);
 }
 
 void OnScroll(GLFWwindow* win, double x, double y)
@@ -125,7 +123,7 @@ void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods)
 	{
 		switch (key)
 		{
-		case GLFW_KEY_TAB:
+		case GLFW_KEY_SPACE:
 			wireframeMode = !wireframeMode;
 			UpdatePolygoneMode();
 			break;
@@ -244,24 +242,16 @@ int main()
 		} // ruby
 	};
 
-	const int cube_count = 1;
+	const int cube_count = 200;
 
 	ModelTransform cubeTrans[cube_count];
 	int cubeMat[cube_count];
 	for (int i = 0; i < cube_count; i++)
 	{
-	/*
 		float scale = (rand() % 6 + 1) / 20.0f;
 		cubeTrans[i] = {
 			glm::vec3((rand() % 201 - 100) / 50.0f, (rand() % 201 - 100) / 50.0f, (rand() % 201 - 100) / 50.0f),
 			glm::vec3(rand() / 100.0f, rand() / 100.0f, rand() / 100.0f),
-			glm::vec3(scale, scale, scale)
-		};
-		*/
-		float scale = 0.05f;
-		cubeTrans[i] = {
-			glm::vec3(0, 0, 0),
-			glm::vec3(10.0f,0,0),
 			glm::vec3(scale, scale, scale)
 		};
 		cubeMat[i] = rand() % 3;
@@ -270,6 +260,7 @@ int main()
 			i--;
 	}
 
+	
 #pragma region BUFFERS INITIALIZATION
 	unsigned int box_texture;
 	glGenTextures(1, &box_texture);
@@ -282,7 +273,7 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	if (channels == 3)
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box_width, box_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box_width, box_height, 0, GL_RGB,  GL_UNSIGNED_BYTE, data);
 	else
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box_width, box_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	//glGenerateMipmap(GL_TEXTURE_2D);
@@ -297,7 +288,7 @@ int main()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
 
 	// position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*) 0);
 	glEnableVertexAttribArray(0);
 
 	// normal
@@ -318,16 +309,8 @@ int main()
 	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
 	Shader* backpack_shader = new Shader("shaders\\backpack.vert", "shaders\\backpack.frag");
 
-	ModelTransform earthTrans = {
-	glm::vec3(0.f, 0.f, 0.f),			// position
-	glm::vec3(0.f, 0.f, 0.f),			// rotation
-	glm::vec3(0.01, 0.01f, 0.01f) };	// scale
-
-
-	Model earth("models/Earth1/earth.obj", true);
-	//Model backpack("models/backpack/backpack.obj", false);
-	//Model chair("models/chair/chair.obj", false);
-
+	Model backpack("models/backpack/backpack.obj", false);
+	
 	float max = 0;
 
 	ModelTransform lightTrans = {
@@ -338,7 +321,7 @@ int main()
 	double oldTime = glfwGetTime(), newTime, deltaTime;
 
 #pragma region LIGHT INITIALIZATION
-
+	
 	vector<Light*> lights;
 	int total_lights = 4;
 	int active_lights = 0;
@@ -391,21 +374,21 @@ int main()
 		processInput(win, deltaTime);
 
 
-		flashLight->position = camera.Position - camera.Up * 0.3f;
+		flashLight->position = camera.Position - camera.Up*0.3f;
 		flashLight->direction = camera.Front;
 
 		redLamp->position.x = 0.2f;
-		redLamp->position.z = 0.1f * cos(newTime * 2);
-		redLamp->position.y = 0.1f * sin(newTime * 2);
+		redLamp->position.z = 0.1f * cos(newTime*2); 
+		redLamp->position.y = 0.1f * sin(newTime*2);
 
 		blueLamp->position.x = 0.2f;
-		blueLamp->position.z = 0.1f * cos(newTime * 2 + glm::pi<float>());
-		blueLamp->position.y = 0.1f * sin(newTime * 2 + glm::pi<float>());
+		blueLamp->position.z = 0.1f * cos(newTime*2 + glm::pi<float>());
+		blueLamp->position.y = 0.1f * sin(newTime*2 + glm::pi<float>());
 
-
+		
 		glClearColor(background.r, background.g, background.b, background.a);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		
 		glm::mat4 p = camera.GetProjectionMatrix();
 		glm::mat4 v = camera.GetViewMatrix();
 		glm::mat4 pv = p * v;
@@ -413,7 +396,7 @@ int main()
 
 
 		// DRAWING BOXES
-
+		/*
 		polygon_shader->use();
 		polygon_shader->setMatrix4F("pv", pv);
 		polygon_shader->setBool("wireframeMode", wireframeMode);
@@ -425,29 +408,29 @@ int main()
 			active_lights += lights[i]->putInShader(polygon_shader, active_lights);
 		}
 		polygon_shader->setInt("lights_count", active_lights);
+		
+		for (int i = 0; i < cube_count; i++)
+		{
+			model = glm::mat4(1.0f);
 
-		//for (int i = 0; i < cube_count; i++)
-		//{
-		//	model = glm::mat4(1.0f);
+			model = glm::translate(model, cubeTrans[i].position);
+			model = glm::rotate(model, glm::radians(cubeTrans[i].rotation.x), glm::vec3(1.f, 0.f, 0.f));
+			model = glm::rotate(model, glm::radians(cubeTrans[i].rotation.y), glm::vec3(0.f, 1.f, 0.f));
+			model = glm::rotate(model, glm::radians(cubeTrans[i].rotation.z), glm::vec3(0.f, 0.f, 1.f));
+			model = glm::scale(model, cubeTrans[i].scale);
 
-		//	model = glm::translate(model, cubeTrans[i].position);
-		//	model = glm::rotate(model, glm::radians(cubeTrans[i].rotation.x), glm::vec3(1.f, 0.f, 0.f));
-		//	model = glm::rotate(model, glm::radians(cubeTrans[i].rotation.y+=0.05f), glm::vec3(0.f, 1.f, 0.f));
-		//	model = glm::rotate(model, glm::radians(cubeTrans[i].rotation.z), glm::vec3(0.f, 0.f, 1.f));
-		//	model = glm::scale(model, cubeTrans[i].scale);
+			polygon_shader->setMatrix4F("model", model);
+			
+			polygon_shader->setVec3("material.ambient",		cubeMaterials[cubeMat[i]].ambient);
+			polygon_shader->setVec3("material.diffuse",		cubeMaterials[cubeMat[i]].diffuse);
+			polygon_shader->setVec3("material.specular",	cubeMaterials[cubeMat[i]].specular);
+			polygon_shader->setFloat("material.shininess",	cubeMaterials[cubeMat[i]].shininess);
 
-		//	polygon_shader->setMatrix4F("model", model);
-
-		//	polygon_shader->setVec3("material.ambient", cubeMaterials[cubeMat[i]].ambient);
-		//	polygon_shader->setVec3("material.diffuse", cubeMaterials[cubeMat[i]].diffuse);
-		//	polygon_shader->setVec3("material.specular", cubeMaterials[cubeMat[i]].specular);
-		//	polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat[i]].shininess);
-
-		//	glBindTexture(GL_TEXTURE_2D, box_texture);
-		//	glBindVertexArray(VAO_polygon);
-		//	glDrawArrays(GL_TRIANGLES, 0, 36);
-		//}
-
+			glBindTexture(GL_TEXTURE_2D, box_texture);
+			glBindVertexArray(VAO_polygon);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}*/
+				
 		// DRAWING LAMPS
 		light_shader->use();
 		light_shader->setMatrix4F("pv", pv);
@@ -462,6 +445,7 @@ int main()
 		light_shader->setVec3("lightColor", glm::vec3(1.0f, 0.2f, 0.2f));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
+
 		// Blue Lamp
 		lightTrans.position = blueLamp->position;
 		model = glm::mat4(1.0f);
@@ -475,7 +459,6 @@ int main()
 		// DRAWING BACKPACK
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-		model = glm::rotate(model, glm::radians(earthTrans.rotation.x += 0.02f), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
 		backpack_shader->use();
 		backpack_shader->setMatrix4F("pv", pv);
@@ -490,9 +473,8 @@ int main()
 		}
 		backpack_shader->setInt("lights_count", active_lights);
 
-		//backpack.Draw(backpack_shader);
-		earth.Draw(backpack_shader);
-
+		backpack.Draw(backpack_shader);
+	
 		glfwSwapBuffers(win);
 		glfwPollEvents();
 	}

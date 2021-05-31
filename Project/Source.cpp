@@ -394,7 +394,6 @@ int main()
 		glm::mat4 pv = p * v;
 		glm::mat4 model;
 
-
 		// DRAWING BOXES
 		/*
 		polygon_shader->use();

@@ -309,7 +309,7 @@ int main()
 	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
 	Shader* backpack_shader = new Shader("shaders\\backpack.vert", "shaders\\backpack.frag");
 
-	Model backpack("models/backpack/backpack.obj", false);
+	Model backpack("models/earth/earth.obj", true);
 	
 	float max = 0;
 

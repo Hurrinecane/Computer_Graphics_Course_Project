@@ -454,7 +454,6 @@ int main()
 		light_shader->setVec3("lightColor", glm::vec3(0.2f, 0.2f, 1.0f));
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-
 		// DRAWING EARTH
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));

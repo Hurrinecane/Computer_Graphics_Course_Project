@@ -132,6 +132,38 @@ void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods)
 	}
 }
 
+unsigned int loadCubemap(vector<std::string> faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	return textureID;
+}
+
 typedef unsigned char byte;
 
 Light* flashLight, * redLamp, * blueLamp, * sunLight;
@@ -179,47 +211,47 @@ int main()
 
 	float cube[] = {
 		//position			normal					texture				color			
-	-1.0f,-1.0f,-1.0f,	-1.0f,  0.0f,  0.0f,	0.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f,-1.0f, 1.0f,	-1.0f,  0.0f,  0.0f,	1.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f, 1.0f,	-1.0f,  0.0f,  0.0f,	1.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f,-1.0f,-1.0f,	-1.0f,  0.0f,  0.0f,	0.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f, 1.0f,	-1.0f,  0.0f,  0.0f,	1.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f,-1.0f,	-1.0f,  0.0f,  0.0f,	0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
+	-1.0f,-1.0f,-1.0f,	-1.0f, 0.0f,  0.0f,		0.0f, 0.0f,		0.0f, 1.0f, 0.0f,
+	-1.0f,-1.0f, 1.0f,	-1.0f, 0.0f,  0.0f,		1.0f, 0.0f,		0.0f, 1.0f, 0.0f,
+	-1.0f, 1.0f, 1.0f,	-1.0f, 0.0f,  0.0f,		1.0f, 1.0f,		0.0f, 1.0f, 0.0f,
+	-1.0f,-1.0f,-1.0f,	-1.0f, 0.0f,  0.0f,		0.0f, 0.0f,		0.0f, 1.0f, 0.0f,
+	-1.0f, 1.0f, 1.0f,	-1.0f, 0.0f,  0.0f,		1.0f, 1.0f,		0.0f, 1.0f, 0.0f,
+	-1.0f, 1.0f,-1.0f,	-1.0f, 0.0f,  0.0f,		0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
 
-	1.0f, 1.0f,-1.0f,	0.0f,  0.0f, -1.0f, 	0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	-1.0f,-1.0f,-1.0f,	0.0f,  0.0f, -1.0f, 	1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-	-1.0f, 1.0f,-1.0f,	0.0f,  0.0f, -1.0f, 	1.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	1.0f, 1.0f,-1.0f,	0.0f,  0.0f, -1.0f,		0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	1.0f,-1.0f,-1.0f,	0.0f,  0.0f, -1.0f,		0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-	-1.0f,-1.0f,-1.0f,	0.0f,  0.0f, -1.0f,		1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+	 1.0f, 1.0f,-1.0f,	 0.0f, 0.0f, -1.0f,		0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
+	-1.0f,-1.0f,-1.0f,	 0.0f, 0.0f, -1.0f,		1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+	-1.0f, 1.0f,-1.0f,	 0.0f, 0.0f, -1.0f,		1.0f, 1.0f,		1.0f, 0.0f, 0.0f,
+	 1.0f, 1.0f,-1.0f,	 0.0f, 0.0f, -1.0f,		0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
+	 1.0f,-1.0f,-1.0f,	 0.0f, 0.0f, -1.0f,		0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+	-1.0f,-1.0f,-1.0f,	 0.0f, 0.0f, -1.0f,		1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
 
-	1.0f,-1.0f, 1.0f,	0.0f, -1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-	-1.0f,-1.0f,-1.0f,	0.0f, -1.0f,  0.0f,		1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-	1.0f,-1.0f,-1.0f,	0.0f, -1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-	1.0f,-1.0f, 1.0f,	0.0f, -1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-	-1.0f,-1.0f, 1.0f,	0.0f, -1.0f,  0.0f,		1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-	-1.0f,-1.0f,-1.0f,	0.0f, -1.0f,  0.0f,		1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
+	 1.0f,-1.0f, 1.0f,	 0.0f, 1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+	-1.0f,-1.0f,-1.0f,	 0.0f, 1.0f,  0.0f,		1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
+	 1.0f,-1.0f,-1.0f,	 0.0f, 1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
+	 1.0f,-1.0f, 1.0f,	 0.0f, 1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+	-1.0f,-1.0f, 1.0f,	 0.0f, 1.0f,  0.0f,		1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+	-1.0f,-1.0f,-1.0f,	 0.0f, 1.0f,  0.0f,		1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
 
-	-1.0f, 1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-	-1.0f,-1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-	1.0f,-1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-	1.0f, 1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-	-1.0f, 1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-	1.0f,-1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+	-1.0f, 1.0f, 1.0f,	 0.0f, 0.0f,  1.0f,		0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
+	-1.0f,-1.0f, 1.0f,	 0.0f, 0.0f,  1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+	 1.0f,-1.0f, 1.0f,	 0.0f, 0.0f,  1.0f,		1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
+	 1.0f, 1.0f, 1.0f,	 0.0f, 0.0f,  1.0f,		1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
+	-1.0f, 1.0f, 1.0f,	 0.0f, 0.0f,  1.0f,		0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
+	 1.0f,-1.0f, 1.0f,	 0.0f, 0.0f,  1.0f,		1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
 
-	1.0f, 1.0f, 1.0f,	1.0f,  0.0f,  0.0f,		0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	1.0f,-1.0f,-1.0f,	1.0f,  0.0f,  0.0f,		1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-	1.0f, 1.0f,-1.0f,	1.0f,  0.0f,  0.0f,		1.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	1.0f,-1.0f,-1.0f,	1.0f,  0.0f,  0.0f,		1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-	1.0f, 1.0f, 1.0f,	1.0f,  0.0f,  0.0f,		0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	1.0f,-1.0f, 1.0f,	1.0f,  0.0f,  0.0f,		0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+	 1.0f, 1.0f, 1.0f,	 1.0f, 0.0f,  0.0f,		0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
+	 1.0f,-1.0f,-1.0f,	 1.0f, 0.0f,  0.0f,		1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+	 1.0f, 1.0f,-1.0f,	 1.0f, 0.0f,  0.0f,		1.0f, 1.0f,		1.0f, 0.0f, 0.0f,
+	 1.0f,-1.0f,-1.0f,	 1.0f, 0.0f,  0.0f,		1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
+	 1.0f, 1.0f, 1.0f,	 1.0f, 0.0f,  0.0f,		0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
+	 1.0f,-1.0f, 1.0f,	 1.0f, 0.0f,  0.0f,		0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
 
-	1.0f, 1.0f, 1.0f,	0.0f,  1.0f,  0.0f,		1.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-	1.0f, 1.0f,-1.0f,	0.0f,  1.0f,  0.0f,		1.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f,-1.0f,	0.0f,  1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-	1.0f, 1.0f, 1.0f,	0.0f,  1.0f,  0.0f,		1.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f,-1.0f,	0.0f,  1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f, 1.0f,	0.0f,  1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 1.0f, 0.0f
+	 1.0f, 1.0f, 1.0f,	 0.0f, 1.0f,  0.0f,		1.0f, 0.0f,		0.0f, 1.0f, 0.0f,
+	 1.0f, 1.0f,-1.0f,	 0.0f, 1.0f,  0.0f,		1.0f, 1.0f,		0.0f, 1.0f, 0.0f,
+	-1.0f, 1.0f,-1.0f,	 0.0f, 1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
+	 1.0f, 1.0f, 1.0f,	 0.0f, 1.0f,  0.0f,		1.0f, 0.0f,		0.0f, 1.0f, 0.0f,
+	-1.0f, 1.0f,-1.0f,	 0.0f, 1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
+	-1.0f, 1.0f, 1.0f,	 0.0f, 1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 1.0f, 0.0f
 	};
 
 	Material cubeMaterials[3] = {
@@ -243,7 +275,7 @@ int main()
 		} // ruby
 	};
 
-	const int cube_count = 200;
+	const int cube_count = 5;
 
 	ModelTransform cubeTrans[cube_count];
 	int cubeMat[cube_count];
@@ -263,9 +295,9 @@ int main()
 
 
 #pragma region BUFFERS INITIALIZATION
+
 	unsigned int box_texture;
 	glGenTextures(1, &box_texture);
-
 	glBindTexture(GL_TEXTURE_2D, box_texture);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -309,13 +341,14 @@ int main()
 	Shader* polygon_shader = new Shader("shaders\\basic.vert", "shaders\\basic.frag");
 	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
 	Shader* earth_shader = new Shader("shaders\\backpack.vert", "shaders\\backpack.frag");
+	Shader* skybox_shader = new Shader("shaders\\skybox.vert", "shaders\\skybox.frag");
 
 	ModelTransform earthTrans = {
-		glm::vec3(0.f, 0.f, 0.f),		// position
-		glm::vec3(0.f, 0.f, 0.f),		// rotation
-		glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
+	glm::vec3(0.f, 0.f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
+	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
 
-	Model earth("models/Earth/earth.obj", true);
+	//Model earth("models/Earth/earth.obj", true);
 
 	float max = 0;
 
@@ -325,6 +358,17 @@ int main()
 		glm::vec3(0.01f, 0.01f, 0.01f) };	// scale
 
 	double oldTime = glfwGetTime(), newTime, deltaTime;
+
+	vector<std::string> faces
+	{
+		"models\\skybox\\right.jpg",
+		"models\\skybox\\left.jpg",
+		"models\\skybox\\top.jpg",
+		"models\\skybox\\bottom.jpg",
+		"models\\skybox\\front.jpg",
+		"models\\skybox\\back.jpg"
+	};
+	unsigned int cubemapTexture = loadCubemap(faces);
 
 #pragma region LIGHT INITIALIZATION
 
@@ -391,7 +435,6 @@ int main()
 		blueLamp->position.z = 0.1f * cos(newTime * 2 + glm::pi<float>());
 		blueLamp->position.y = 0.1f * sin(newTime * 2 + glm::pi<float>());
 
-
 		glClearColor(background.r, background.g, background.b, background.a);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -401,7 +444,7 @@ int main()
 		glm::mat4 model;
 
 		// DRAWING BOXES
-		/*
+		
 		polygon_shader->use();
 		polygon_shader->setMatrix4F("pv", pv);
 		polygon_shader->setBool("wireframeMode", wireframeMode);
@@ -434,12 +477,12 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, box_texture);
 			glBindVertexArray(VAO_polygon);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}*/
+		}
 
 		// DRAWING LAMPS
 		light_shader->use();
 		light_shader->setMatrix4F("pv", pv);
-		glBindVertexArray(VAO_polygon);
+		//glBindVertexArray(VAO_polygon);
 
 		// Red Lamp
 		lightTrans.position = redLamp->position;
@@ -462,12 +505,14 @@ int main()
 
 
 		// DRAWING EARTH
+		earth_shader->use();
+		earth_shader->setMatrix4F("pv", pv);
+
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, earthTrans.position);
 		model = glm::rotate(model, glm::radians(earthTrans.rotation.y += 0.02f), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, earthTrans.scale);
-		earth_shader->use();
-		earth_shader->setMatrix4F("pv", pv);
+
 		earth_shader->setMatrix4F("model", model);
 		earth_shader->setFloat("shininess", 64.0f);
 		earth_shader->setVec3("viewPos", camera.Position);
@@ -479,7 +524,7 @@ int main()
 		}
 		earth_shader->setInt("lights_count", active_lights);
 
-		earth.Draw(earth_shader);
+		//earth.Draw(earth_shader);
 
 		glfwSwapBuffers(win);
 		glfwPollEvents();

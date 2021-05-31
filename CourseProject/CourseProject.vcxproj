@@ -70,12 +70,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ExecutablePath>D:\Google Drive\University\6 семестр\Компьютерная графика\CourseProject\CourseProject\Dependencies\include;$(ExecutablePath)</ExecutablePath>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <LibraryPath>D:\Google Drive\University\6 семестр\Компьютерная графика\CourseProject\CourseProject\Dependencies\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\Google Drive\University\6 семестр\Компьютерная графика\CourseProject\CourseProject\Dependencies\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ExecutablePath>D:\Google Drive\University\6 семестр\Компьютерная графика\CourseProject\CourseProject\Dependencies\include;$(ExecutablePath)</ExecutablePath>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
     <LibraryPath>D:\Google Drive\University\6 семестр\Компьютерная графика\CourseProject\CourseProject\Dependencies\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\Google Drive\University\6 семестр\Компьютерная графика\CourseProject\CourseProject\Dependencies\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

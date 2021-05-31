@@ -276,7 +276,7 @@ int main()
 	};
 
 	const int cube_count = 5;
-
+	
 	ModelTransform cubeTrans[cube_count];
 	int cubeMat[cube_count];
 	for (int i = 0; i < cube_count; i++)
@@ -292,6 +292,7 @@ int main()
 		if ((glm::vec3(0, 0, 0) - cubeTrans[i].position).length() < 0.7f)
 			i--;
 	}
+	
 
 
 #pragma region BUFFERS INITIALIZATION
@@ -348,7 +349,7 @@ int main()
 	glm::vec3(0.f, 0.f, 0.f),		// rotation
 	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
 
-	//Model earth("models/Earth/earth.obj", true);
+	Model earth("models/Earth/earth.obj", true);
 
 	float max = 0;
 
@@ -444,7 +445,7 @@ int main()
 		glm::mat4 model;
 
 		// DRAWING BOXES
-		
+		/*
 		polygon_shader->use();
 		polygon_shader->setMatrix4F("pv", pv);
 		polygon_shader->setBool("wireframeMode", wireframeMode);
@@ -477,7 +478,7 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, box_texture);
 			glBindVertexArray(VAO_polygon);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		}*/
 
 		// DRAWING LAMPS
 		light_shader->use();
@@ -524,7 +525,7 @@ int main()
 		}
 		earth_shader->setInt("lights_count", active_lights);
 
-		//earth.Draw(earth_shader);
+		earth.Draw(earth_shader);
 
 		glfwSwapBuffers(win);
 		glfwPollEvents();

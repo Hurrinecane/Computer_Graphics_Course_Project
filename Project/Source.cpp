@@ -310,12 +310,12 @@ int main()
 	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
 	Shader* earth_shader = new Shader("shaders\\backpack.vert", "shaders\\backpack.frag");
 
-	Model earth("models/earth/earth.obj", true);
-
 	ModelTransform earthTrans = {
 		glm::vec3(0.f, 0.f, 0.f),		// position
 		glm::vec3(0.f, 0.f, 0.f),		// rotation
 		glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
+
+	Model earth("models/Earth/earth.obj", true);
 
 	float max = 0;
 

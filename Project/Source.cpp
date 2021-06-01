@@ -204,6 +204,7 @@ int main()
 
 #pragma endregion
 
+	
 	ModelTransform earthTrans = {
 	glm::vec3(0.f, 0.f, 0.f),		// position
 	glm::vec3(0.f, 0.f, 0.f),		// rotation
@@ -282,7 +283,7 @@ int main()
 			77.f
 		} // ruby
 	};
-	/*
+
 	const int cube_count = 5;
 
 	ModelTransform cubeTrans[cube_count];
@@ -300,7 +301,7 @@ int main()
 		if ((glm::vec3(0, 0, 0) - cubeTrans[i].position).length() < 0.7f)
 			i--;
 	}
-	*/
+
 
 #pragma region BUFFERS INITIALIZATION
 
@@ -424,6 +425,7 @@ int main()
 
 		processInput(win, deltaTime);
 
+
 		flashLight->position = camera.Position - camera.Up * 0.3f;
 		flashLight->direction = camera.Front;
 
@@ -444,7 +446,7 @@ int main()
 		glm::mat4 model;
 
 		// DRAWING BOXES
-		/*
+		
 		polygon_shader->use();
 		polygon_shader->setMatrix4F("pv", pv);
 		polygon_shader->setBool("wireframeMode", wireframeMode);
@@ -478,7 +480,7 @@ int main()
 			glBindVertexArray(VAO_polygon);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-		*/
+
 		// DRAWING LAMPS
 		light_shader->use();
 		light_shader->setMatrix4F("pv", pv);

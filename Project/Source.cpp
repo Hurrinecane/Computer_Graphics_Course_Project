@@ -204,6 +204,14 @@ int main()
 
 #pragma endregion
 
+	ModelTransform earthTrans = {
+	glm::vec3(0.f, 0.f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
+	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
+
+	Model earth("models/Earth/earth.obj", true);
+
+
 	int box_width, box_height, channels;
 	byte* data = stbi_load("images\\box.png", &box_width, &box_height, &channels, 0);
 
@@ -274,9 +282,9 @@ int main()
 			77.f
 		} // ruby
 	};
-
+	/*
 	const int cube_count = 5;
-	
+
 	ModelTransform cubeTrans[cube_count];
 	int cubeMat[cube_count];
 	for (int i = 0; i < cube_count; i++)
@@ -292,8 +300,7 @@ int main()
 		if ((glm::vec3(0, 0, 0) - cubeTrans[i].position).length() < 0.7f)
 			i--;
 	}
-	
-
+	*/
 
 #pragma region BUFFERS INITIALIZATION
 
@@ -343,13 +350,6 @@ int main()
 	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
 	Shader* earth_shader = new Shader("shaders\\backpack.vert", "shaders\\backpack.frag");
 	Shader* skybox_shader = new Shader("shaders\\skybox.vert", "shaders\\skybox.frag");
-
-	ModelTransform earthTrans = {
-	glm::vec3(0.f, 0.f, 0.f),		// position
-	glm::vec3(0.f, 0.f, 0.f),		// rotation
-	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
-
-	Model earth("models/Earth/earth.obj", true);
 
 	float max = 0;
 
@@ -424,7 +424,6 @@ int main()
 
 		processInput(win, deltaTime);
 
-
 		flashLight->position = camera.Position - camera.Up * 0.3f;
 		flashLight->direction = camera.Front;
 
@@ -478,8 +477,8 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, box_texture);
 			glBindVertexArray(VAO_polygon);
 			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}*/
-
+		}
+		*/
 		// DRAWING LAMPS
 		light_shader->use();
 		light_shader->setMatrix4F("pv", pv);

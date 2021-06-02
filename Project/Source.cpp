@@ -46,7 +46,7 @@ struct Material
 	float shininess;
 };
 
-Camera camera(glm::vec3(0.183165, -0.0376139, 0.031249), glm::vec3(0.f, 1.0f, 0.f), 243.051, -20.7);
+Camera camera(glm::vec3(0.240, 0.187, 0.502), glm::vec3(0.f, 1.0f, 0.f), 243.051, -20.7);
 
 void OnResize(GLFWwindow* win, int width, int height)
 {
@@ -131,6 +131,38 @@ void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods)
 	}
 }
 
+unsigned int loadCubemap(vector<std::string> faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	return textureID;
+}
+
 typedef unsigned char byte;
 
 Light* flashLight, * redLamp, * blueLamp, * sunLight;
@@ -171,8 +203,17 @@ int main()
 
 #pragma endregion
 
+
+	Model earth("res/models/earth/earth.obj", true);
+
+	ModelTransform earthTrans = {
+	glm::vec3(0.f, 0.f, 0.f),			// position
+	glm::vec3(0.f, 0.f, 0.f),			// rotation
+	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
+
+
 	int box_width, box_height, channels;
-	byte* data = stbi_load("images\\box.png", &box_width, &box_height, &channels, 0);
+	byte* data = stbi_load("res\\images\\box.png", &box_width, &box_height, &channels, 0);
 
 	const int verts = 36;
 
@@ -220,7 +261,7 @@ int main()
 	-1.0f, 1.0f,-1.0f,	0.0f,  1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
 	-1.0f, 1.0f, 1.0f,	0.0f,  1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 1.0f, 0.0f
 	};
-
+	/*
 	Material cubeMaterials[3] = {
 		{
 			glm::vec3(0.25, 0.20725, 0.20725),
@@ -259,9 +300,21 @@ int main()
 		if ((glm::vec3(0, 0, 0) - cubeTrans[i].position).length() < 0.7f)
 			i--;
 	}
-
+	*/
 	
 #pragma region BUFFERS INITIALIZATION
+
+	vector<std::string> faces
+	{
+		"res\\skyboxes\\space_lightblue\\right.png",
+		"res\\skyboxes\\space_lightblue\\left.png",
+		"res\\skyboxes\\space_lightblue\\top.png",
+		"res\\skyboxes\\space_lightblue\\bottom.png",
+		"res\\skyboxes\\space_lightblue\\front.png",
+		"res\\skyboxes\\space_lightblue\\back.png"
+	};
+	unsigned int cubemapTexture = loadCubemap(faces);
+
 	unsigned int box_texture;
 	glGenTextures(1, &box_texture);
 
@@ -280,6 +333,7 @@ int main()
 	stbi_image_free(data);
 
 	unsigned int VBO_polygon, VAO_polygon;
+
 	glGenBuffers(1, &VBO_polygon);
 	glGenVertexArrays(1, &VAO_polygon);
 
@@ -308,20 +362,10 @@ int main()
 	Shader* polygon_shader = new Shader("shaders\\basic.vert", "shaders\\basic.frag");
 	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
 	Shader* earth_shader = new Shader("shaders\\earth.vert", "shaders\\earth.frag");
-
-	Model earth("models/earth/earth.obj", false);
-
-	float max = 0;
-
-	ModelTransform lightTrans = {
-		glm::vec3(0.f, 0.f, 0.f),			// position
-		glm::vec3(0.f, 0.f, 0.f),			// rotation
-		glm::vec3(0.01, 0.01f, 0.01f) };	// scale
-
-	double oldTime = glfwGetTime(), newTime, deltaTime;
+	Shader* skybox_shader = new Shader("shaders\\skybox.vert", "shaders\\skybox.frag");
 
 #pragma region LIGHT INITIALIZATION
-	
+
 	vector<Light*> lights;
 	int total_lights = 4;
 	int active_lights = 0;
@@ -365,6 +409,13 @@ int main()
 
 #pragma endregion
 
+	ModelTransform lightTrans = {
+	glm::vec3(0.f, 0.f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
+	glm::vec3(0.01f, 0.01f, 0.01f) };	// scale
+
+	double oldTime = glfwGetTime(), newTime, deltaTime;
+
 	while (!glfwWindowShouldClose(win))
 	{
 		newTime = glfwGetTime();
@@ -390,10 +441,26 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		glm::mat4 p = camera.GetProjectionMatrix();
-		glm::mat4 v = camera.GetViewMatrix();
-		glm::mat4 pv = p * v;
-		glm::mat4 model;
+		glm::mat4 v = glm::mat4(glm::mat3(camera.GetViewMatrix()));
 
+		glm::mat4 pv = p * v;
+
+		glCullFace(GL_FRONT);
+		glDepthMask(GL_FALSE);
+		skybox_shader->use();
+		skybox_shader->setMatrix4F("pv", pv);
+
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glBindVertexArray(VAO_polygon);
+		glDrawArrays(GL_TRIANGLES, 0, verts);
+		glDepthMask(GL_TRUE);
+		glCullFace(GL_BACK);
+
+
+		v = camera.GetViewMatrix();
+		pv = p * v;
+
+		glm::mat4 model;
 
 		// DRAWING BOXES
 		/*
@@ -428,7 +495,7 @@ int main()
 
 			glBindTexture(GL_TEXTURE_2D, box_texture);
 			glBindVertexArray(VAO_polygon);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDrawArrays(GL_TRIANGLES, 0, verts);
 		}*/
 
 		
@@ -444,7 +511,7 @@ int main()
 		model = glm::scale(model, lightTrans.scale);
 		light_shader->setMatrix4F("model", model);
 		light_shader->setVec3("lightColor", glm::vec3(1.0f, 0.2f, 0.2f));
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDrawArrays(GL_TRIANGLES, 0, verts);
 
 
 		// Blue Lamp
@@ -454,13 +521,14 @@ int main()
 		model = glm::scale(model, lightTrans.scale);
 		light_shader->setMatrix4F("model", model);
 		light_shader->setVec3("lightColor", glm::vec3(0.2f, 0.2f, 1.0f));
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDrawArrays(GL_TRIANGLES, 0, verts);
 
-
+		
 		// DRAWING EARTH
 		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+		model = glm::translate(model, earthTrans.position);
+		model = glm::rotate(model, glm::radians(earthTrans.rotation.y += 0.05f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::scale(model, earthTrans.scale);
 		earth_shader->use();
 		earth_shader->setMatrix4F("pv", pv);
 		earth_shader->setMatrix4F("model", model);

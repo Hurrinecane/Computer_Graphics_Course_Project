@@ -1,16 +1,12 @@
 #version 330 core
-layout (location = 0) in vec3 inPos;
+layout (location = 0) in vec3 aPos;
 
-out vec3 texCoords;
+out vec3 TexCoords;
 
 uniform mat4 pv;
-uniform mat4 model;
 
 void main()
 {
-    
-	vec4 vertPos = model * vec4(inPos, 1.0);
-    gl_Position = pv* vec4(inPos, 1.0);
-    texCoords = inPos;
-
+    TexCoords = aPos;
+    gl_Position = pv * vec4(aPos, 1.0);
 }  

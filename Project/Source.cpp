@@ -203,12 +203,11 @@ int main()
 
 #pragma endregion
 
-
 	Model earth("res/models/earth/earth.obj", true);
 
 	ModelTransform earthTrans = {
-	glm::vec3(0.f, 0.f, 0.f),			// position
-	glm::vec3(0.f, 0.f, 0.f),			// rotation
+	glm::vec3(0.f, 0.f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
 	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
 
 
@@ -301,17 +300,17 @@ int main()
 			i--;
 	}
 	*/
-	
+
 #pragma region BUFFERS INITIALIZATION
 
 	vector<std::string> faces
 	{
-		"res\\skyboxes\\space_lightblue\\right.png",
-		"res\\skyboxes\\space_lightblue\\left.png",
-		"res\\skyboxes\\space_lightblue\\top.png",
-		"res\\skyboxes\\space_lightblue\\bottom.png",
-		"res\\skyboxes\\space_lightblue\\front.png",
-		"res\\skyboxes\\space_lightblue\\back.png"
+		"res\\skyboxes\\space\\right.jpg",
+		"res\\skyboxes\\space\\left.jpg",
+		"res\\skyboxes\\space\\top.jpg",
+		"res\\skyboxes\\space\\bottom.jpg",
+		"res\\skyboxes\\space\\front.jpg",
+		"res\\skyboxes\\space\\back.jpg"
 	};
 	unsigned int cubemapTexture = loadCubemap(faces);
 
@@ -326,7 +325,7 @@ int main()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	if (channels == 3)
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box_width, box_height, 0, GL_RGB,  GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box_width, box_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 	else
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box_width, box_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	//glGenerateMipmap(GL_TEXTURE_2D);
@@ -342,7 +341,7 @@ int main()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
 
 	// position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*) 0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	// normal
@@ -425,40 +424,37 @@ int main()
 		processInput(win, deltaTime);
 
 
-		flashLight->position = camera.Position - camera.Up*0.3f;
+		flashLight->position = camera.Position - camera.Up * 0.3f;
 		flashLight->direction = camera.Front;
 
 		redLamp->position.x = 0.2f;
-		redLamp->position.z = 0.1f * cos(newTime*2); 
-		redLamp->position.y = 0.1f * sin(newTime*2);
+		redLamp->position.z = 0.1f * cos(newTime * 2);
+		redLamp->position.y = 0.1f * sin(newTime * 2);
 
 		blueLamp->position.x = 0.2f;
-		blueLamp->position.z = 0.1f * cos(newTime*2 + glm::pi<float>());
-		blueLamp->position.y = 0.1f * sin(newTime*2 + glm::pi<float>());
+		blueLamp->position.z = 0.1f * cos(newTime * 2 + glm::pi<float>());
+		blueLamp->position.y = 0.1f * sin(newTime * 2 + glm::pi<float>());
 
-		
+
 		glClearColor(background.r, background.g, background.b, background.a);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+
 		glm::mat4 p = camera.GetProjectionMatrix();
-		glm::mat4 v = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+		//glm::mat4 v = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+		glm::mat4 v = camera.GetViewMatrix();
 
 		glm::mat4 pv = p * v;
 
-		glCullFace(GL_FRONT);
-		glDepthMask(GL_FALSE);
-		skybox_shader->use();
-		skybox_shader->setMatrix4F("pv", pv);
-
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glBindVertexArray(VAO_polygon);
-		glDrawArrays(GL_TRIANGLES, 0, verts);
-		glDepthMask(GL_TRUE);
-		glCullFace(GL_BACK);
-
-
-		v = camera.GetViewMatrix();
-		pv = p * v;
+		//glCullFace(GL_FRONT);
+		//glDepthMask(GL_FALSE);
+		//skybox_shader->use();
+		//skybox_shader->setMatrix4F("pv", pv);
+		//
+		//glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		//glBindVertexArray(VAO_polygon);
+		//glDrawArrays(GL_TRIANGLES, 0, verts);
+		//glDepthMask(GL_TRUE);
+		//glCullFace(GL_BACK);
 
 		glm::mat4 model;
 
@@ -475,7 +471,7 @@ int main()
 			active_lights += lights[i]->putInShader(polygon_shader, active_lights);
 		}
 		polygon_shader->setInt("lights_count", active_lights);
-		
+
 		for (int i = 0; i < cube_count; i++)
 		{
 			model = glm::mat4(1.0f);
@@ -487,7 +483,7 @@ int main()
 			model = glm::scale(model, cubeTrans[i].scale);
 
 			polygon_shader->setMatrix4F("model", model);
-			
+
 			polygon_shader->setVec3("material.ambient",		cubeMaterials[cubeMat[i]].ambient);
 			polygon_shader->setVec3("material.diffuse",		cubeMaterials[cubeMat[i]].diffuse);
 			polygon_shader->setVec3("material.specular",	cubeMaterials[cubeMat[i]].specular);
@@ -498,7 +494,7 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, verts);
 		}*/
 
-		
+
 		// DRAWING LAMPS
 		light_shader->use();
 		light_shader->setMatrix4F("pv", pv);
@@ -523,7 +519,7 @@ int main()
 		light_shader->setVec3("lightColor", glm::vec3(0.2f, 0.2f, 1.0f));
 		glDrawArrays(GL_TRIANGLES, 0, verts);
 
-		
+
 		// DRAWING EARTH
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, earthTrans.position);
@@ -543,6 +539,27 @@ int main()
 		earth_shader->setInt("lights_count", active_lights);
 
 		earth.Draw(earth_shader);
+
+#pragma region skybox 
+		// draw skybox as last
+		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+		glCullFace(GL_FRONT);
+
+		v = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+		pv = p * v;
+		skybox_shader->use();
+		skybox_shader->setMatrix4F("pv", pv);
+
+		// skybox cube
+		glBindVertexArray(VAO_polygon);
+		//glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//glBindVertexArray(0);
+
+		glCullFace(GL_BACK);
+		glDepthFunc(GL_LESS); // set depth function back to default
+#pragma endregion
 
 		glfwSwapBuffers(win);
 		glfwPollEvents();

@@ -132,9 +132,9 @@ void main()
 void *font = GLUT_BITMAP_8_BY_13;
 int screenWidth;
 int screenHeight;
-bool mouseLeftDown;
-bool mouseRightDown;
-bool mouseMiddleDown;
+bool mouseLeftPress;
+bool mouseRightPress;
+bool mouseMiddlePress;
 float mouseX, mouseY;
 float cameraAngleX;
 float cameraAngleY;
@@ -368,9 +368,9 @@ bool initGLSL()
     uniformMaterialShininess         = glGetUniformLocation(progId, "materialShininess");
     uniformMap0                      = glGetUniformLocation(progId, "map0");
     uniformTextureUsed               = glGetUniformLocation(progId, "textureUsed");
-    attribVertexPosition = glGetAttribLocation(progId, "vertexPosition");
-    attribVertexNormal   = glGetAttribLocation(progId, "vertexNormal");
-    attribVertexTexCoord = glGetAttribLocation(progId, "vertexTexCoord");
+    attribVertexPosition             = glGetAttribLocation(progId, "vertexPosition");
+    attribVertexNormal               = glGetAttribLocation(progId, "vertexNormal");
+    attribVertexTexCoord             = glGetAttribLocation(progId, "vertexTexCoord");
 
     // set uniform values
     float lightPosition[] = {0, 0, 1, 0};
@@ -474,7 +474,7 @@ bool initSharedMem()
     screenWidth = SCREEN_WIDTH;
     screenHeight = SCREEN_HEIGHT;
 
-    mouseLeftDown = mouseRightDown = mouseMiddleDown = false;
+    mouseLeftPress = mouseRightPress = mouseMiddlePress = false;
     mouseX = mouseY = 0;
 
     cameraAngleX = cameraAngleY = 0.0f;
@@ -942,44 +942,44 @@ void mouseCB(int button, int state, int x, int y)
     {
         if(state == GLUT_DOWN)
         {
-            mouseLeftDown = true;
+            mouseLeftPress = true;
         }
         else if(state == GLUT_UP)
-            mouseLeftDown = false;
+            mouseLeftPress = false;
     }
 
     else if(button == GLUT_RIGHT_BUTTON)
     {
         if(state == GLUT_DOWN)
         {
-            mouseRightDown = true;
+            mouseRightPress = true;
         }
         else if(state == GLUT_UP)
-            mouseRightDown = false;
+            mouseRightPress = false;
     }
 
     else if(button == GLUT_MIDDLE_BUTTON)
     {
         if(state == GLUT_DOWN)
         {
-            mouseMiddleDown = true;
+            mouseMiddlePress = true;
         }
         else if(state == GLUT_UP)
-            mouseMiddleDown = false;
+            mouseMiddlePress = false;
     }
 }
 
 
 void mouseMotionCB(int x, int y)
 {
-    if(mouseLeftDown)
+    if(mouseLeftPress)
     {
         cameraAngleY += (x - mouseX);
         cameraAngleX += (y - mouseY);
         mouseX = x;
         mouseY = y;
     }
-    if(mouseRightDown)
+    if(mouseRightPress)
     {
         cameraDistance -= (y - mouseY) * 0.2f;
         mouseY = y;

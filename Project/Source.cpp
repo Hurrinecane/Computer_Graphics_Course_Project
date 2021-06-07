@@ -18,6 +18,8 @@
 #include "Model.h"
 #include "Light.h"
 
+typedef unsigned char byte;
+
 struct ModelTransform
 {
 	glm::vec3 position;
@@ -48,124 +50,24 @@ struct Material
 
 Camera camera(glm::vec3(0.240, 0.187, 0.502), glm::vec3(0.f, 1.0f, 0.f), 243.051, -20.7);
 
-void OnResize(GLFWwindow* win, int width, int height)
-{
-	glViewport(0, 0, width, height);
-}
-
-void processInput(GLFWwindow* win, double dt)
-{
-	if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(win, true);
-	if (glfwGetKey(win, GLFW_KEY_1) == GLFW_PRESS)
-		background = { 1.0f, 0.0f, 0.0f, 1.0f };
-	if (glfwGetKey(win, GLFW_KEY_2) == GLFW_PRESS)
-		background = { 0.0f, 1.0f, 0.0f, 1.0f };
-	if (glfwGetKey(win, GLFW_KEY_3) == GLFW_PRESS)
-		background = { 0.0f, 0.0f, 1.0f, 1.0f };
-	if (glfwGetKey(win, GLFW_KEY_4) == GLFW_PRESS)
-		background = { 0.55f, 0.8f, 0.85f, 1.0f };
-	if (glfwGetKey(win, GLFW_KEY_5) == GLFW_PRESS)
-		background = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-	if (glfwGetKey(win, GLFW_KEY_P) == GLFW_PRESS)
-	{
-		cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << endl;
-		cout << camera.Yaw << " " << camera.Pitch << endl;
-	}
-
-	uint32_t dir = 0;
-
-	if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		dir |= CAM_UP;
-	if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-		dir |= CAM_DOWN;
-	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
-		dir |= CAM_FORWARD;
-	if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
-		dir |= CAM_BACKWARD;
-	if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
-		dir |= CAM_LEFT;
-	if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
-		dir |= CAM_RIGHT;
-
-	double newx = 0.f, newy = 0.f;
-	glfwGetCursorPos(win, &newx, &newy);
-	static double x = newx, y = newy;
-	double xoffset = newx - x;
-	double yoffset = newy - y;
-	x = newx;
-	y = newy;
-
-	camera.Move(dir, dt);
-	camera.Rotate(xoffset, -yoffset);
-}
-
-void OnScroll(GLFWwindow* win, double x, double y)
-{
-	camera.ChangeFOV(y);
-	std::cout << "Scrolled x: " << x << ", y: " << y << ". FOV = " << camera.Fov << std::endl;
-}
-
+Light* flashLight, * redLamp, * blueLamp, * sunLight;
 bool wireframeMode = false;
 
-void UpdatePolygoneMode()
+void UpdatePolygoneMode();
+unsigned int loadCubemap(vector<std::string> faces);
+
+void processInput(GLFWwindow* win, double dt);
+void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods);
+void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods);
+void OnMouseMoutionAction(GLFWwindow* win, double x, double y);
+void OnScroll(GLFWwindow* win, double x, double y);
+void OnResize(GLFWwindow* win, int width, int height);
+
+struct 
 {
-	if (wireframeMode)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-}
-
-void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods)
-{
-	if (action == GLFW_PRESS)
-	{
-		switch (key)
-		{
-		case GLFW_KEY_TAB:
-			wireframeMode = !wireframeMode;
-			UpdatePolygoneMode();
-			break;
-		}
-	}
-}
-
-unsigned int loadCubemap(vector<std::string> faces)
-{
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-	int width, height, nrChannels;
-	for (unsigned int i = 0; i < faces.size(); i++)
-	{
-		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-		if (data)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-			);
-			stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
-			stbi_image_free(data);
-		}
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-	return textureID;
-}
-
-typedef unsigned char byte;
-
-Light* flashLight, * redLamp, * blueLamp, * sunLight;
+	int h;
+	int w;
+} resolution = { 1280, 720 };
 
 int main()
 {
@@ -175,7 +77,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* win = glfwCreateWindow(1280, 720, "OpenGL Window", NULL, NULL);
+	GLFWwindow* win = glfwCreateWindow(resolution.h, resolution.w, "OpenGL Window", NULL, NULL);
 	if (win == NULL)
 	{
 		std::cout << "Error. Couldn't create window!" << std::endl;
@@ -193,13 +95,16 @@ int main()
 	glfwSetFramebufferSizeCallback(win, OnResize);
 	glfwSetScrollCallback(win, OnScroll);
 	glfwSetKeyCallback(win, OnKeyAction);
-
-	glViewport(0, 0, 1280, 720);
+	glfwSetMouseButtonCallback(win, OnMouseKeyAction);
+	glfwSetCursorPosCallback(win, OnMouseMoutionAction);
+	glViewport(0, 0, resolution.h, resolution.w);
 	glEnable(GL_DEPTH_TEST);
-	glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	UpdatePolygoneMode();
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
+	
+	//glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
 
 #pragma endregion
 
@@ -215,7 +120,7 @@ int main()
 	byte* data = stbi_load("res\\images\\box.png", &box_width, &box_height, &channels, 0);
 
 	const int verts = 36;
-
+#pragma region CUBES
 	float cube[] = {
 		//position			normal					texture				color			
 	-1.0f,-1.0f,-1.0f,	-1.0f,  0.0f,  0.0f,	0.0f, 0.0f,		0.0f, 1.0f, 0.0f,
@@ -260,7 +165,7 @@ int main()
 	-1.0f, 1.0f,-1.0f,	0.0f,  1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
 	-1.0f, 1.0f, 1.0f,	0.0f,  1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 1.0f, 0.0f
 	};
-	/*
+
 	Material cubeMaterials[3] = {
 		{
 			glm::vec3(0.25, 0.20725, 0.20725),
@@ -282,7 +187,7 @@ int main()
 		} // ruby
 	};
 
-	const int cube_count = 200;
+	const int cube_count = 1;
 
 	ModelTransform cubeTrans[cube_count];
 	int cubeMat[cube_count];
@@ -299,7 +204,7 @@ int main()
 		if ((glm::vec3(0, 0, 0) - cubeTrans[i].position).length() < 0.7f)
 			i--;
 	}
-	*/
+#pragma endregion
 
 #pragma region BUFFERS INITIALIZATION
 
@@ -389,20 +294,20 @@ int main()
 
 	sunLight = new Light("Sun", true);
 	sunLight->initLikeDirectionalLight(
-		glm::vec3(-1.0f, -1.0f, -1.0f),
-		glm::vec3(0.1f, 0.1f, 0.1f),
-		glm::vec3(0.5f, 0.5f, 0.5f),
-		glm::vec3(0.0f, 0.0f, 0.0f));
+		glm::vec3(-1.0f, -1.0f, -1.0f),	//position
+		glm::vec3(0.3f, 0.3f, 0.3f),	//ambient
+		glm::vec3(0.7f, 0.7f, 0.7f),	//diffuse
+		glm::vec3(0.0f, 0.0f, 0.0f));	//specular
 	lights.push_back(sunLight);
 
 	flashLight = new Light("FlashLight", true);
 	flashLight->initLikeSpotLight(
-		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f),	//position
+		glm::vec3(0.0f, 0.0f, 0.0f),	//direction
 		glm::radians(10.f),
-		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(0.7f, 0.7f, 0.6f),
-		glm::vec3(0.8f, 0.8f, 0.6f),
+		glm::vec3(0.0f, 0.0f, 0.0f),	//ambient
+		glm::vec3(0.7f, 0.7f, 0.6f),	//diffuse
+		glm::vec3(0.8f, 0.8f, 0.6f),	//specular
 		1.0f, 0.1f, 0.09f);
 	lights.push_back(flashLight);
 
@@ -423,43 +328,16 @@ int main()
 
 		processInput(win, deltaTime);
 
-
-		flashLight->position = camera.Position - camera.Up * 0.3f;
-		flashLight->direction = camera.Front;
-
-		redLamp->position.x = 0.2f;
-		redLamp->position.z = 0.1f * cos(newTime * 2);
-		redLamp->position.y = 0.1f * sin(newTime * 2);
-
-		blueLamp->position.x = 0.2f;
-		blueLamp->position.z = 0.1f * cos(newTime * 2 + glm::pi<float>());
-		blueLamp->position.y = 0.1f * sin(newTime * 2 + glm::pi<float>());
-
-
 		glClearColor(background.r, background.g, background.b, background.a);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 p = camera.GetProjectionMatrix();
-		//glm::mat4 v = glm::mat4(glm::mat3(camera.GetViewMatrix()));
 		glm::mat4 v = camera.GetViewMatrix();
-
 		glm::mat4 pv = p * v;
-
-		//glCullFace(GL_FRONT);
-		//glDepthMask(GL_FALSE);
-		//skybox_shader->use();
-		//skybox_shader->setMatrix4F("pv", pv);
-		//
-		//glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		//glBindVertexArray(VAO_polygon);
-		//glDrawArrays(GL_TRIANGLES, 0, verts);
-		//glDepthMask(GL_TRUE);
-		//glCullFace(GL_BACK);
-
 		glm::mat4 model;
 
 		// DRAWING BOXES
-		/*
+
 		polygon_shader->use();
 		polygon_shader->setMatrix4F("pv", pv);
 		polygon_shader->setBool("wireframeMode", wireframeMode);
@@ -471,7 +349,7 @@ int main()
 			active_lights += lights[i]->putInShader(polygon_shader, active_lights);
 		}
 		polygon_shader->setInt("lights_count", active_lights);
-
+		/*
 		for (int i = 0; i < cube_count; i++)
 		{
 			model = glm::mat4(1.0f);
@@ -492,8 +370,19 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, box_texture);
 			glBindVertexArray(VAO_polygon);
 			glDrawArrays(GL_TRIANGLES, 0, verts);
-		}*/
+		}
+		*/
 
+		flashLight->position = camera.Position - camera.Up * 0.3f;
+		flashLight->direction = camera.Front;
+
+		redLamp->position.x = 0.2f;
+		redLamp->position.z = 0.1f * cos(newTime * 2);
+		redLamp->position.y = 0.1f * sin(newTime * 2);
+
+		blueLamp->position.x = 0.2f;
+		blueLamp->position.z = 0.1f * cos(newTime * 2 + glm::pi<float>());
+		blueLamp->position.y = 0.1f * sin(newTime * 2 + glm::pi<float>());
 
 		// DRAWING LAMPS
 		light_shader->use();
@@ -528,7 +417,6 @@ int main()
 		earth_shader->use();
 		earth_shader->setMatrix4F("pv", pv);
 		earth_shader->setMatrix4F("model", model);
-		earth_shader->setFloat("shininess", 64.0f);
 		earth_shader->setVec3("viewPos", camera.Position);
 
 		active_lights = 0;
@@ -537,8 +425,28 @@ int main()
 			active_lights += lights[i]->putInShader(earth_shader, active_lights);
 		}
 		earth_shader->setInt("lights_count", active_lights);
-
+		
+		glEnable(GL_BLEND);
 		earth.Draw(earth_shader);
+		glDisable(GL_BLEND);
+
+		//polygon_shader->use();
+		//polygon_shader->setMatrix4F("pv", pv);
+		//polygon_shader->setBool("wireframeMode", wireframeMode);
+		//polygon_shader->setVec3("viewPos", camera.Position);
+		//
+		//model = glm::scale(model, glm::vec3(0.6f, 0.6f, 0.6f));
+		//
+		//polygon_shader->setMatrix4F("model", model);
+		//
+		//polygon_shader->setVec3("material.ambient", cubeMaterials[cubeMat[0]].ambient);
+		//polygon_shader->setVec3("material.diffuse", cubeMaterials[cubeMat[0]].diffuse);
+		//polygon_shader->setVec3("material.specular", cubeMaterials[cubeMat[0]].specular);
+		//polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat[0]].shininess);
+		//
+		//glBindTexture(GL_TEXTURE_2D, box_texture);
+		//glBindVertexArray(VAO_polygon);
+		//glDrawArrays(GL_TRIANGLES, 0, verts);
 
 #pragma region skybox 
 		// draw skybox as last
@@ -552,10 +460,10 @@ int main()
 
 		// skybox cube
 		glBindVertexArray(VAO_polygon);
-		//glActiveTexture(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-		//glBindVertexArray(0);
+		glBindVertexArray(0);
 
 		glCullFace(GL_BACK);
 		glDepthFunc(GL_LESS); // set depth function back to default
@@ -569,4 +477,180 @@ int main()
 
 	glfwTerminate();
 	return 0;
+}
+
+void OnResize(GLFWwindow* win, int width, int height)
+{
+	glViewport(0, 0, width, height);
+}
+
+void processInput(GLFWwindow* win, double dt)
+{
+	if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(win, true);
+	if (glfwGetKey(win, GLFW_KEY_1) == GLFW_PRESS)
+		background = { 1.0f, 0.0f, 0.0f, 1.0f };
+	if (glfwGetKey(win, GLFW_KEY_2) == GLFW_PRESS)
+		background = { 0.0f, 1.0f, 0.0f, 1.0f };
+	if (glfwGetKey(win, GLFW_KEY_3) == GLFW_PRESS)
+		background = { 0.0f, 0.0f, 1.0f, 1.0f };
+	if (glfwGetKey(win, GLFW_KEY_4) == GLFW_PRESS)
+		background = { 0.55f, 0.8f, 0.85f, 1.0f };
+	if (glfwGetKey(win, GLFW_KEY_5) == GLFW_PRESS)
+		background = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+	if (glfwGetKey(win, GLFW_KEY_P) == GLFW_PRESS)
+	{
+		cout << camera.Position.x << " " << camera.Position.y << " " << camera.Position.z << endl;
+		cout << camera.Yaw << " " << camera.Pitch << endl;
+	}
+
+	uint32_t dir = 0;
+
+	if (glfwGetKey(win, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+		dir |= CAM_UP;
+	if (glfwGetKey(win, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+		dir |= CAM_DOWN;
+	if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
+		dir |= CAM_FORWARD;
+	if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
+		dir |= CAM_BACKWARD;
+	if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
+		dir |= CAM_LEFT;
+	if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
+		dir |= CAM_RIGHT;
+
+	camera.Move(dir, dt);
+
+
+}
+
+void OnScroll(GLFWwindow* win, double x, double y)
+{
+	camera.ChangeFOV(y);
+	std::cout << "Scrolled x: " << x << ", y: " << y << ". FOV = " << camera.Fov << std::endl;
+}
+
+void UpdatePolygoneMode()
+{
+	if (wireframeMode)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods)
+{
+	if (action == GLFW_PRESS)
+	{
+		switch (key)
+		{
+		case GLFW_KEY_TAB:
+			wireframeMode = !wireframeMode;
+			UpdatePolygoneMode();
+			break;
+		}
+	}
+}
+
+bool mouseLeftPress, mouseRightPress, mouseMiddlePress;
+double mouseX = resolution.h / 2, mouseY = resolution.w / 2, mouseXtmp = 0, mouseYtmp = 0;
+void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods)
+{
+	
+	if (button == GLFW_MOUSE_BUTTON_LEFT)
+	{
+		if (action == GLFW_PRESS)
+		{
+			mouseLeftPress = true;
+		}
+		else if (action == GLFW_RELEASE)
+		{
+			mouseLeftPress = false;
+		}
+	}
+
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+	{
+		if (action == GLFW_PRESS)
+		{
+			glfwGetCursorPos(win, &mouseXtmp, &mouseYtmp);
+			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+			glfwSetCursorPos(win, resolution.h / 2, resolution.w / 2);
+			mouseRightPress = true;
+		}
+		else if (action == GLFW_RELEASE)
+		{
+			glfwSetCursorPos(win, mouseXtmp, mouseYtmp);
+			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			mouseX = resolution.h / 2;
+			mouseY = resolution.w / 2;
+			mouseRightPress = false;
+		}
+	}
+
+	else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+	{
+		if (action == GLFW_PRESS)
+		{
+			mouseMiddlePress = true;
+		}
+		else if (action == GLFW_RELEASE)
+			mouseMiddlePress = false;
+	}
+}
+
+void OnMouseMoutionAction(GLFWwindow* win, double x, double y)
+{
+	if (mouseLeftPress)
+	{		
+		//camera.Position *=  glm::vec3(cosf((x - mouseX) * 3.141593f / 180.0f), 0.0f, -sinf((y - mouseY)* 3.141593f / 180.0f));
+		//camera.Front *= glm::vec3(cosf((x - mouseX) * 3.141593f / 180.0f), 0.0f, -sinf((y - mouseY) * 3.141593f / 180.0f));
+		//camera.Right *= glm::vec3(cosf((x - mouseX) * 3.141593f / 180.0f), 0.0f, -sinf((y - mouseY) * 3.141593f / 180.0f));
+
+	}
+	if (mouseRightPress)
+	{
+		double newx = 0.f, newy = 0.f;
+		glfwGetCursorPos(win, &newx, &newy);
+		double xoffset = newx - mouseX;
+		double yoffset = newy - mouseY;
+		mouseX = newx;
+		mouseY = newy;
+
+		camera.Rotate(xoffset, -yoffset);
+	}
+}
+
+
+unsigned int loadCubemap(vector<std::string> faces)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+			);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	return textureID;
 }

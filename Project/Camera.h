@@ -60,9 +60,12 @@ public:
 
     glm::mat4 GetProjectionMatrix();
 
+    
+    void LookAt(int32_t direction, float deltaTime);
+
     void Move(int32_t direction, float deltaTime);
 
-    void Rotate(float xoffset, float yoffset, GLboolean constrainPitch = true);
+    void Rotate(float xoffset, float yoffset, GLboolean constrainPitch = false);
 
     void ChangeFOV(double value);
 

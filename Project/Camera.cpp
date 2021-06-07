@@ -46,7 +46,6 @@ void Camera::Move(int32_t dirs, float deltaTime)
     direction.x = (dirs & CAM_RIGHT) / CAM_RIGHT - (dirs & CAM_LEFT) / CAM_LEFT;
     direction.y = (dirs & CAM_UP) / CAM_UP - (dirs & CAM_DOWN) / CAM_DOWN;
     
-    //sadnessforever, thx for bugfix
     if (direction != glm::vec3(0,0,0))
         direction = glm::normalize(direction);
         

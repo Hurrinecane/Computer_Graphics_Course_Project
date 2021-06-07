@@ -20,7 +20,7 @@ Kd 1.0 1.0 1.0
 Ks 0.0 0.0 0.0
 Ns 1000
 Ni 1.1
-d 0.25
+d 0.1
 illum 2
 map_Kd Sky.jpg
 map_d Sky.jpg

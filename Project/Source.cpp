@@ -48,9 +48,9 @@ struct Material
 	float shininess;
 };
 
-Camera camera(glm::vec3(0.240, 0.187, 0.502), glm::vec3(0.f, 1.0f, 0.f), 243.051, -20.7);
+Camera camera(glm::vec3(0.240f, 0.f, 0.502f), glm::vec3(0.f, 1.0f, 0.f), 243.051, 0);
 
-Light* flashLight, * redLamp, * sunLight;
+Light* flashLight, * sunLight;
 bool wireframeMode = false;
 
 void UpdatePolygoneMode();
@@ -63,11 +63,14 @@ void OnMouseMoutionAction(GLFWwindow* win, double x, double y);
 void OnScroll(GLFWwindow* win, double x, double y);
 void OnResize(GLFWwindow* win, int width, int height);
 
-struct 
+struct
 {
 	int h;
 	int w;
 } resolution = { 1280, 720 };
+
+bool mode = 0;
+float cameraAngleX, cameraAngleY;
 
 int main()
 {
@@ -103,7 +106,7 @@ int main()
 	UpdatePolygoneMode();
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
-	
+
 	//glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
 
 #pragma endregion
@@ -111,8 +114,8 @@ int main()
 	Model earth("res/models/earth/earth.obj", true);
 
 	ModelTransform earthTrans = {
-	glm::vec3(0.f, 0.f, 0.f),		// position
-	glm::vec3(0.f, 0.f, 0.f),		// rotation
+	glm::vec3(0.f, 0.f, 0.f),				// position
+	glm::vec3(0.f, 0.f, 0.f),				// rotation
 	glm::vec3(0.001f, 0.001f, 0.001f) };	// scale
 
 
@@ -233,7 +236,7 @@ int main()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box_width, box_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 	else
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box_width, box_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	//glGenerateMipmap(GL_TEXTURE_2D);
+	glGenerateMipmap(GL_TEXTURE_2D);
 	stbi_image_free(data);
 
 	unsigned int VBO_polygon, VAO_polygon;
@@ -274,21 +277,13 @@ int main()
 	int total_lights = 3;
 	int active_lights = 0;
 
-	redLamp = new Light("LampRed", true);
-	redLamp->initLikePointLight(
+	sunLight = new Light("Sun", true);
+	sunLight->initLikePointLight(
 		glm::vec3(-0.9f, 0.445f, -0.44f),	//position
-		glm::vec3(0.f, 0.f, 0.f),		//ambient
+		glm::vec3(0.f, 0.f, 0.f),			//ambient
 		glm::vec3(0.9f, 0.9f, 0.9f),		//diffuse
 		glm::vec3(0.0f, 0.0f, 0.0f),		//specular
 		1.0f, 0.f, 0.0f);
-	lights.push_back(redLamp);
-
-	sunLight = new Light("Sun", true);
-	sunLight->initLikeDirectionalLight(
-		glm::vec3(-1.0f, -1.0f, -1.0f),	//position
-		glm::vec3(0.f, 0.f, 0.f),		//ambient
-		glm::vec3(0.f, 0.f, 0.f),		//diffuse
-		glm::vec3(0.0f, 0.0f, 0.0f));	//specular
 	lights.push_back(sunLight);
 
 	flashLight = new Light("FlashLight", true);
@@ -307,9 +302,12 @@ int main()
 	ModelTransform lightTrans = {
 	glm::vec3(0.f, 0.f, 0.f),			// position
 	glm::vec3(0.f, 0.f, 0.f),			// rotation
-	glm::vec3(0.05f, 0.05f, 0.05f) };		// scale
+	glm::vec3(0.05f, 0.05f, 0.05f) };	// scale
 
 	double oldTime = glfwGetTime(), newTime, deltaTime;
+
+
+
 
 	while (!glfwWindowShouldClose(win))
 	{
@@ -323,10 +321,21 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 p = camera.GetProjectionMatrix();
-		glm::mat4 v = camera.GetViewMatrix();
-		//float camX = sin(glfwGetTime());
-		//float camZ = cos(glfwGetTime());
-		//glm::mat4 v = glm::lookAt(glm::vec3(camera.Position.x, camera.Position.y, camera.Position.z), camera.Position + camera.Front, camera.Up);
+		glm::mat4 v;
+		switch (mode)
+		{
+		case 0:
+			v = camera.GetViewMatrix();
+			break;
+		default:
+			float camX = sin(glfwGetTime()) * 0.1f;
+			float camZ = cos(glfwGetTime()) * 0.1f;
+			//v = camera.GetViewMatrix() * glm::lookAt(glm::vec3(camX, 0.f, camZ), glm::vec3(0.f, 0.f, 0.f), camera.Up);
+			v = camera.GetViewMatrix();
+			v = glm::rotate(v, glm::radians(cameraAngleX), glm::vec3(0.f, 1.f, 0.f));
+			v = glm::rotate(v, glm::radians(cameraAngleY), glm::vec3(0.f, 1.f, 0.f));
+			break;
+		}
 		glm::mat4 pv = p * v;
 		glm::mat4 model;
 
@@ -336,7 +345,7 @@ int main()
 		// DRAWING EARTH
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, earthTrans.position);
-		model = glm::rotate(model, glm::radians(earthTrans.rotation.y > 360 ? earthTrans.rotation.y -= 360 : earthTrans.rotation.y += 0.f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(earthTrans.rotation.y > 360 ? earthTrans.rotation.y -= 360 : earthTrans.rotation.y += 0.05f), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, earthTrans.scale);
 		earth_shader->use();
 		earth_shader->setMatrix4F("pv", pv);
@@ -349,28 +358,28 @@ int main()
 			active_lights += lights[i]->putInShader(earth_shader, active_lights);
 		}
 		earth_shader->setInt("lights_count", active_lights);
-		
+
 		glEnable(GL_BLEND);
 		earth.Draw(earth_shader);
 		glDisable(GL_BLEND);
 
-		/*polygon_shader->use();
-		polygon_shader->setMatrix4F("pv", pv);
-		polygon_shader->setBool("wireframeMode", wireframeMode);
-		polygon_shader->setVec3("viewPos", camera.Position);
-		
-		model = glm::scale(model, glm::vec3(0.55f, 0.55f, 0.55f));
-		
-		polygon_shader->setMatrix4F("model", model);
-		
-		polygon_shader->setVec3("material.ambient", cubeMaterials[cubeMat[0]].ambient);
-		polygon_shader->setVec3("material.diffuse", cubeMaterials[cubeMat[0]].diffuse);
-		polygon_shader->setVec3("material.specular", cubeMaterials[cubeMat[0]].specular);
-		polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat[0]].shininess);
-		
-		glBindTexture(GL_TEXTURE_2D, box_texture);
-		glBindVertexArray(VAO_polygon);
-		glDrawArrays(GL_TRIANGLES, 0, verts);*/
+		//polygon_shader->use();
+		//polygon_shader->setMatrix4F("pv", pv);
+		//polygon_shader->setBool("wireframeMode", wireframeMode);
+		//polygon_shader->setVec3("viewPos", camera.Position);
+		//
+		//model = glm::scale(model, glm::vec3(10.f, 10.f, 10.f));
+		//
+		//polygon_shader->setMatrix4F("model", model);
+		//
+		//polygon_shader->setVec3("material.ambient", cubeMaterials[cubeMat[0]].ambient);
+		//polygon_shader->setVec3("material.diffuse", cubeMaterials[cubeMat[0]].diffuse);
+		//polygon_shader->setVec3("material.specular", cubeMaterials[cubeMat[0]].specular);
+		//polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat[0]].shininess);
+		//
+		//glBindTexture(GL_TEXTURE_2D, box_texture);
+		//glBindVertexArray(VAO_polygon);
+		//glDrawArrays(GL_TRIANGLES, 0, verts);
 
 #pragma region skybox 
 		// draw skybox as last
@@ -395,11 +404,11 @@ int main()
 		glBindVertexArray(VAO_polygon);
 
 		// Red Lamp
-		lightTrans.position = redLamp->position;
+		lightTrans.position = sunLight->position;
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightTrans.position);
 		model = glm::rotate(model, glm::radians(lightTrans.rotation.z == 360 ? lightTrans.rotation.z -= 360 : lightTrans.rotation.z += 10.f), glm::vec3(0.f, 1.f, 0.f));
-				
+
 		model = glm::scale(model, lightTrans.scale);
 		light_shader->setMatrix4F("model", model);
 		light_shader->setVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
@@ -498,15 +507,24 @@ bool mouseLeftPress, mouseRightPress, mouseMiddlePress;
 double mouseX = resolution.h / 2, mouseY = resolution.w / 2, mouseXtmp = 0, mouseYtmp = 0;
 void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods)
 {
-	
+
 	if (button == GLFW_MOUSE_BUTTON_LEFT)
 	{
 		if (action == GLFW_PRESS)
 		{
+			mode = !mode;
+			glfwGetCursorPos(win, &mouseXtmp, &mouseYtmp);
+			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+			glfwSetCursorPos(win, resolution.h / 2, resolution.w / 2);
 			mouseLeftPress = true;
 		}
 		else if (action == GLFW_RELEASE)
 		{
+			mode = !mode;
+			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			glfwSetCursorPos(win, mouseXtmp, mouseYtmp);
+			mouseX = resolution.h / 2;
+			mouseY = resolution.w / 2;
 			mouseLeftPress = false;
 		}
 	}
@@ -544,8 +562,14 @@ void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods)
 void OnMouseMoutionAction(GLFWwindow* win, double x, double y)
 {
 	if (mouseLeftPress)
-	{		
-		
+	{
+		glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		double newx = 0.f, newy = 0.f;
+		glfwGetCursorPos(win, &newx, &newy);
+		cameraAngleX += newx - mouseX;
+		cameraAngleY += newy - mouseY;
+		mouseX = newx;
+		mouseY = newy;
 	}
 	if (mouseRightPress)
 	{

@@ -67,7 +67,6 @@ void main()
         outColor = vec4(vertColor, 1.0f);
     else
     {
-        outColor = vec4(0, 0, 0, 0);
         vec3 lresult;
         for (int i = 0; i<lights_count; i++)
         {

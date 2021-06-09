@@ -22,7 +22,7 @@ in vec3 vertNormal;
 in vec3 FragPos;
 in mat3 TBN;
 
-out vec4 OutColor;
+out vec4 outColor;
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_specular1;
@@ -31,8 +31,8 @@ uniform float shininess = 64.0f;
 
 uniform vec3 viewPos;
 #define MAX_LIGHTS 4
-uniform int lights_count;
 uniform Light light[MAX_LIGHTS];
+uniform int lights_count;
 
 float getAtten(int i)
 {
@@ -108,6 +108,6 @@ void main()
                 }
             }
         }
-        OutColor += vec4(lresult, 1.0f);
+        outColor += vec4(lresult, 1.0f);
     }// end of for
 }

@@ -65,7 +65,7 @@ public:
 
     void Move(int32_t direction, float deltaTime);
 
-    void Rotate(float xoffset, float yoffset, GLboolean constrainPitch = false);
+    void Rotate(float xoffset, float yoffset, GLboolean constrainPitch = true);
 
     void ChangeFOV(double value);
 

@@ -34,12 +34,6 @@ struct ModelTransform
 	}
 };
 
-struct Color {
-	float r, g, b, a;
-};
-
-Color background = { 0.f, 0.f, 0.f, 1.f };
-
 struct Material
 {
 	glm::vec3 ambient;
@@ -48,10 +42,19 @@ struct Material
 	float shininess;
 };
 
-Camera camera(glm::vec3(0.240f, 0.f, 0.502f), glm::vec3(0.f, 1.0f, 0.f), 243.051, 0);
+Camera camera(glm::vec3(-0.9f, 0.f, -0.44f), glm::vec3(0.f, 1.0f, 0.f), 20, 0);
 
 Light* flashLight, * sunLight;
 bool wireframeMode = false;
+bool mouseLeftPress, mouseRightPress, mouseMiddlePress;
+
+struct
+{
+	int h;
+	int w;
+} resolution = { 1280, 720 };
+
+double mouseX = resolution.h / 2, mouseY = resolution.w / 2, mouseXtmp = 0, mouseYtmp = 0;
 
 void UpdatePolygoneMode();
 unsigned int loadCubemap(vector<std::string> faces);
@@ -62,12 +65,7 @@ void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods);
 void OnMouseMoutionAction(GLFWwindow* win, double x, double y);
 void OnScroll(GLFWwindow* win, double x, double y);
 void OnResize(GLFWwindow* win, int width, int height);
-
-struct
-{
-	int h;
-	int w;
-} resolution = { 1280, 720 };
+void renderQuad();
 
 bool mode = 0;
 float cameraAngleX, cameraAngleY;
@@ -107,17 +105,9 @@ int main()
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
 
-	//glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 #pragma endregion
-
-	Model earth("res/models/earth/earth.obj", true);
-
-	ModelTransform earthTrans = {
-	glm::vec3(0.f, 0.f, 0.f),				// position
-	glm::vec3(0.f, 0.f, 0.f),				// rotation
-	glm::vec3(0.001f, 0.001f, 0.001f) };	// scale
-
 
 	int box_width, box_height, channels;
 	byte* data = stbi_load("res\\images\\box.png", &box_width, &box_height, &channels, 0);
@@ -190,24 +180,21 @@ int main()
 		} // ruby
 	};
 
-	const int cube_count = 1;
+	ModelTransform cubeTrans = {
+	glm::vec3(0.f, 0.f, 0.f),				// position
+	glm::vec3(0.f, 0.f, 0.f),				// rowatation
+	glm::vec3(0.001f, 0.001f, 0.001f) };	// scale
+	;
+	int cubeMat = 0;
 
-	ModelTransform cubeTrans[cube_count];
-	int cubeMat[cube_count];
-	for (int i = 0; i < cube_count; i++)
-	{
-		float scale = (rand() % 6 + 1) / 20.0f;
-		cubeTrans[i] = {
-			glm::vec3((rand() % 201 - 100) / 50.0f, (rand() % 201 - 100) / 50.0f, (rand() % 201 - 100) / 50.0f),
-			glm::vec3(rand() / 100.0f, rand() / 100.0f, rand() / 100.0f),
-			glm::vec3(scale, scale, scale)
-		};
-		cubeMat[i] = rand() % 3;
-
-		if ((glm::vec3(0, 0, 0) - cubeTrans[i].position).length() < 0.7f)
-			i--;
-	}
 #pragma endregion
+
+	Model earth("res/models/earth/earth.obj", true);
+
+	ModelTransform earthTrans = {
+	glm::vec3(0.f, 0.f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
+	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
 
 #pragma region BUFFERS INITIALIZATION
 
@@ -263,25 +250,28 @@ int main()
 	// color
 	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
 	glEnableVertexAttribArray(3);
-
+	
 #pragma endregion
+	Shader* shader			= new Shader("shaders/7.bloom.vert", "shaders/7.bloom.frag");
+	Shader* shaderLight		= new Shader("shaders/7.bloom.vert", "shaders/7.light_box.frag");
+	Shader* shaderBlur		= new Shader("shaders/7.blur.vert", "shaders/7.blur.frag");
+	Shader* shaderBloomFinal= new Shader("shaders/7.bloom_final.vert", "shaders/7.bloom_final.frag");
 
-	Shader* polygon_shader = new Shader("shaders\\basic.vert", "shaders\\basic.frag");
-	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
-	Shader* earth_shader = new Shader("shaders\\earth.vert", "shaders\\earth.frag");
-	Shader* skybox_shader = new Shader("shaders\\skybox.vert", "shaders\\skybox.frag");
+	Shader* polygon_shader	= new Shader("shaders\\basic.vert", "shaders\\basic.frag");
+	Shader* light_shader	= new Shader("shaders\\light.vert", "shaders\\light.frag");
+	Shader* earth_shader	= new Shader("shaders\\earth.vert", "shaders\\earth.frag");
+	Shader* skybox_shader	= new Shader("shaders\\skybox.vert", "shaders\\skybox.frag");
 
 #pragma region LIGHT INITIALIZATION
 
 	vector<Light*> lights;
-	int total_lights = 3;
 	int active_lights = 0;
 
 	sunLight = new Light("Sun", true);
 	sunLight->initLikePointLight(
-		glm::vec3(-0.9f, 0.445f, -0.44f),	//position
-		glm::vec3(0.f, 0.f, 0.f),			//ambient
-		glm::vec3(0.9f, 0.9f, 0.9f),		//diffuse
+		glm::vec3(-0.9f, -0.445f, -0.44f),	//position
+		glm::vec3(0.3f, 0.3f, 0.3f),		//ambient
+		glm::vec3(1.f, 1.f, .8f),			//diffuse
 		glm::vec3(0.0f, 0.0f, 0.0f),		//specular
 		1.0f, 0.f, 0.0f);
 	lights.push_back(sunLight);
@@ -295,19 +285,24 @@ int main()
 		glm::vec3(0.7f, 0.7f, 0.6f),	//diffuse
 		glm::vec3(0.8f, 0.8f, 0.6f),	//specular
 		1.0f, 0.1f, 0.09f);
-	lights.push_back(flashLight);
+	//lights.push_back(flashLight);
 
-#pragma endregion
 
 	ModelTransform lightTrans = {
 	glm::vec3(0.f, 0.f, 0.f),			// position
 	glm::vec3(0.f, 0.f, 0.f),			// rotation
 	glm::vec3(0.05f, 0.05f, 0.05f) };	// scale
+#pragma endregion
 
 	double oldTime = glfwGetTime(), newTime, deltaTime;
 
 
 
+	shaderBlur->use();
+	shaderBlur->setInt("image", 0);
+	shaderBloomFinal->use();
+	shaderBloomFinal->setInt("scene", 0);
+	shaderBloomFinal->setInt("bloomBlur", 1);
 
 	while (!glfwWindowShouldClose(win))
 	{
@@ -317,7 +312,7 @@ int main()
 
 		processInput(win, deltaTime);
 
-		glClearColor(background.r, background.g, background.b, background.a);
+		glClearColor(0.1f, .1f, .1f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 p = camera.GetProjectionMatrix();
@@ -327,10 +322,7 @@ int main()
 		case 0:
 			v = camera.GetViewMatrix();
 			break;
-		default:
-			float camX = sin(glfwGetTime()) * 0.1f;
-			float camZ = cos(glfwGetTime()) * 0.1f;
-			//v = camera.GetViewMatrix() * glm::lookAt(glm::vec3(camX, 0.f, camZ), glm::vec3(0.f, 0.f, 0.f), camera.Up);
+		case 1:
 			v = camera.GetViewMatrix();
 			v = glm::rotate(v, glm::radians(cameraAngleX), glm::vec3(0.f, 1.f, 0.f));
 			v = glm::rotate(v, glm::radians(cameraAngleY), glm::vec3(0.f, 1.f, 0.f));
@@ -339,13 +331,13 @@ int main()
 		glm::mat4 pv = p * v;
 		glm::mat4 model;
 
-		flashLight->position = camera.Position - camera.Up * 0.5f;
+		flashLight->position = camera.Position - camera.Up * 0.01f;
 		flashLight->direction = camera.Front;
 
 		// DRAWING EARTH
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, earthTrans.position);
-		model = glm::rotate(model, glm::radians(earthTrans.rotation.y > 360 ? earthTrans.rotation.y -= 360 : earthTrans.rotation.y += 0.05f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(earthTrans.rotation.y > 360 ? earthTrans.rotation.y -= 360 : earthTrans.rotation.y += 0.1f), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, earthTrans.scale);
 		earth_shader->use();
 		earth_shader->setMatrix4F("pv", pv);
@@ -354,32 +346,37 @@ int main()
 
 		active_lights = 0;
 		for (int i = 0; i < lights.size(); i++)
-		{
 			active_lights += lights[i]->putInShader(earth_shader, active_lights);
-		}
+
 		earth_shader->setInt("lights_count", active_lights);
 
 		glEnable(GL_BLEND);
 		earth.Draw(earth_shader);
 		glDisable(GL_BLEND);
 
-		//polygon_shader->use();
-		//polygon_shader->setMatrix4F("pv", pv);
-		//polygon_shader->setBool("wireframeMode", wireframeMode);
-		//polygon_shader->setVec3("viewPos", camera.Position);
-		//
-		//model = glm::scale(model, glm::vec3(10.f, 10.f, 10.f));
-		//
-		//polygon_shader->setMatrix4F("model", model);
-		//
-		//polygon_shader->setVec3("material.ambient", cubeMaterials[cubeMat[0]].ambient);
-		//polygon_shader->setVec3("material.diffuse", cubeMaterials[cubeMat[0]].diffuse);
-		//polygon_shader->setVec3("material.specular", cubeMaterials[cubeMat[0]].specular);
-		//polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat[0]].shininess);
-		//
-		//glBindTexture(GL_TEXTURE_2D, box_texture);
-		//glBindVertexArray(VAO_polygon);
-		//glDrawArrays(GL_TRIANGLES, 0, verts);
+		// DRAWING BOX
+		polygon_shader->use();
+		polygon_shader->setMatrix4F("pv", pv);
+		polygon_shader->setBool("wireframeMode", wireframeMode);
+		polygon_shader->setVec3("viewPos", camera.Position);
+		
+		active_lights = 0;
+		for (int i = 0; i < lights.size(); i++)
+			active_lights += lights[i]->putInShader(polygon_shader, active_lights);
+		polygon_shader->setInt("lights_count", active_lights);
+		
+		model = glm::scale(model, glm::vec3(3.f, 3.f, 3.f));
+		
+		polygon_shader->setMatrix4F("model", model);
+		
+		polygon_shader->setVec3("material.ambient", cubeMaterials[cubeMat].ambient);
+		polygon_shader->setVec3("material.diffuse", cubeMaterials[cubeMat].diffuse);
+		polygon_shader->setVec3("material.specular", cubeMaterials[cubeMat].specular);
+		polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat].shininess);
+		
+		glBindTexture(GL_TEXTURE_2D, box_texture);
+		glBindVertexArray(VAO_polygon);
+		glDrawArrays(GL_TRIANGLES, 0, verts);
 
 #pragma region skybox 
 		// draw skybox as last
@@ -403,17 +400,17 @@ int main()
 		light_shader->setMatrix4F("pv", pv);
 		glBindVertexArray(VAO_polygon);
 
-		// Red Lamp
+		// Sun
 		lightTrans.position = sunLight->position;
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightTrans.position);
-		model = glm::rotate(model, glm::radians(lightTrans.rotation.z == 360 ? lightTrans.rotation.z -= 360 : lightTrans.rotation.z += 10.f), glm::vec3(0.f, 1.f, 0.f));
+		//model = glm::rotate(model, glm::radians(lightTrans.rotation.z == 360 ? lightTrans.rotation.z -= 360 : lightTrans.rotation.z += 10.f), glm::vec3(0.f, 1.f, 0.f));
 
 		model = glm::scale(model, lightTrans.scale);
+		model = glm::scale(model, glm::vec3(5.f, 5.f, 5.f));
 		light_shader->setMatrix4F("model", model);
 		light_shader->setVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
 		glDrawArrays(GL_TRIANGLES, 0, verts);
-
 
 		glCullFace(GL_BACK);
 		glDepthFunc(GL_LESS); // set depth function back to default
@@ -429,6 +426,10 @@ int main()
 	return 0;
 }
 
+
+
+
+
 void OnResize(GLFWwindow* win, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -438,16 +439,6 @@ void processInput(GLFWwindow* win, double dt)
 {
 	if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(win, true);
-	if (glfwGetKey(win, GLFW_KEY_1) == GLFW_PRESS)
-		background = { 1.0f, 0.0f, 0.0f, 1.0f };
-	if (glfwGetKey(win, GLFW_KEY_2) == GLFW_PRESS)
-		background = { 0.0f, 1.0f, 0.0f, 1.0f };
-	if (glfwGetKey(win, GLFW_KEY_3) == GLFW_PRESS)
-		background = { 0.0f, 0.0f, 1.0f, 1.0f };
-	if (glfwGetKey(win, GLFW_KEY_4) == GLFW_PRESS)
-		background = { 0.55f, 0.8f, 0.85f, 1.0f };
-	if (glfwGetKey(win, GLFW_KEY_5) == GLFW_PRESS)
-		background = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 	if (glfwGetKey(win, GLFW_KEY_P) == GLFW_PRESS)
 	{
@@ -481,14 +472,6 @@ void OnScroll(GLFWwindow* win, double x, double y)
 	std::cout << "Scrolled x: " << x << ", y: " << y << ". FOV = " << camera.Fov << std::endl;
 }
 
-void UpdatePolygoneMode()
-{
-	if (wireframeMode)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-}
-
 void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods)
 {
 	if (action == GLFW_PRESS)
@@ -503,8 +486,6 @@ void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods)
 	}
 }
 
-bool mouseLeftPress, mouseRightPress, mouseMiddlePress;
-double mouseX = resolution.h / 2, mouseY = resolution.w / 2, mouseXtmp = 0, mouseYtmp = 0;
 void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods)
 {
 
@@ -585,7 +566,6 @@ void OnMouseMoutionAction(GLFWwindow* win, double x, double y)
 	}
 }
 
-
 unsigned int loadCubemap(vector<std::string> faces)
 {
 	unsigned int textureID;
@@ -616,4 +596,12 @@ unsigned int loadCubemap(vector<std::string> faces)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	return textureID;
+}
+
+void UpdatePolygoneMode()
+{
+	if (wireframeMode)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }

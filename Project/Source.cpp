@@ -50,11 +50,11 @@ bool mouseLeftPress, mouseRightPress, mouseMiddlePress;
 
 struct
 {
-	int h;
-	int w;
-} resolution = { 1280, 720 };
+	int HEIGHT;
+	int WIDTH;
+} RESOLUTION = { 1280, 720 };
 
-double mouseX = resolution.h / 2, mouseY = resolution.w / 2, mouseXtmp = 0, mouseYtmp = 0;
+double mouseX = RESOLUTION.HEIGHT / 2, mouseY = RESOLUTION.WIDTH / 2, mouseXtmp = 0, mouseYtmp = 0;
 
 void UpdatePolygoneMode();
 unsigned int loadCubemap(vector<std::string> faces);
@@ -65,6 +65,8 @@ void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods);
 void OnMouseMoutionAction(GLFWwindow* win, double x, double y);
 void OnScroll(GLFWwindow* win, double x, double y);
 void OnResize(GLFWwindow* win, int width, int height);
+unsigned int loadTexture(char const* path, bool gammaCorrection);
+void renderCube();
 void renderQuad();
 
 bool mode = 0;
@@ -78,7 +80,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* win = glfwCreateWindow(resolution.h, resolution.w, "OpenGL Window", NULL, NULL);
+	GLFWwindow* win = glfwCreateWindow(RESOLUTION.HEIGHT, RESOLUTION.WIDTH, "OpenGL Window", NULL, NULL);
 	if (win == NULL)
 	{
 		std::cout << "Error. Couldn't create window!" << std::endl;
@@ -98,7 +100,7 @@ int main()
 	glfwSetKeyCallback(win, OnKeyAction);
 	glfwSetMouseButtonCallback(win, OnMouseKeyAction);
 	glfwSetCursorPosCallback(win, OnMouseMoutionAction);
-	glViewport(0, 0, resolution.h, resolution.w);
+	glViewport(0, 0, RESOLUTION.HEIGHT, RESOLUTION.WIDTH);
 	glEnable(GL_DEPTH_TEST);
 	glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	UpdatePolygoneMode();
@@ -109,149 +111,6 @@ int main()
 
 #pragma endregion
 
-	int box_width, box_height, channels;
-	byte* data = stbi_load("res\\images\\box.png", &box_width, &box_height, &channels, 0);
-
-	const int verts = 36;
-#pragma region CUBES
-	float cube[] = {
-		//position			normal					texture				color			
-	-1.0f,-1.0f,-1.0f,	-1.0f,  0.0f,  0.0f,	0.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f,-1.0f, 1.0f,	-1.0f,  0.0f,  0.0f,	1.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f, 1.0f,	-1.0f,  0.0f,  0.0f,	1.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f,-1.0f,-1.0f,	-1.0f,  0.0f,  0.0f,	0.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f, 1.0f,	-1.0f,  0.0f,  0.0f,	1.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f,-1.0f,	-1.0f,  0.0f,  0.0f,	0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-
-	1.0f, 1.0f,-1.0f,	0.0f,  0.0f, -1.0f, 	0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	-1.0f,-1.0f,-1.0f,	0.0f,  0.0f, -1.0f, 	1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-	-1.0f, 1.0f,-1.0f,	0.0f,  0.0f, -1.0f, 	1.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	1.0f, 1.0f,-1.0f,	0.0f,  0.0f, -1.0f,		0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	1.0f,-1.0f,-1.0f,	0.0f,  0.0f, -1.0f,		0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-	-1.0f,-1.0f,-1.0f,	0.0f,  0.0f, -1.0f,		1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-
-	1.0f,-1.0f, 1.0f,	0.0f, -1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-	-1.0f,-1.0f,-1.0f,	0.0f, -1.0f,  0.0f,		1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-	1.0f,-1.0f,-1.0f,	0.0f, -1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-	1.0f,-1.0f, 1.0f,	0.0f, -1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-	-1.0f,-1.0f, 1.0f,	0.0f, -1.0f,  0.0f,		1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-	-1.0f,-1.0f,-1.0f,	0.0f, -1.0f,  0.0f,		1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-
-	-1.0f, 1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-	-1.0f,-1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-	1.0f,-1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-	1.0f, 1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		1.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-	-1.0f, 1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		0.0f, 1.0f,		0.0f, 0.0f, 1.0f,
-	1.0f,-1.0f, 1.0f,	0.0f,  0.0f, 1.0f,		1.0f, 0.0f,		0.0f, 0.0f, 1.0f,
-
-	1.0f, 1.0f, 1.0f,	1.0f,  0.0f,  0.0f,		0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	1.0f,-1.0f,-1.0f,	1.0f,  0.0f,  0.0f,		1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-	1.0f, 1.0f,-1.0f,	1.0f,  0.0f,  0.0f,		1.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	1.0f,-1.0f,-1.0f,	1.0f,  0.0f,  0.0f,		1.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-	1.0f, 1.0f, 1.0f,	1.0f,  0.0f,  0.0f,		0.0f, 1.0f,		1.0f, 0.0f, 0.0f,
-	1.0f,-1.0f, 1.0f,	1.0f,  0.0f,  0.0f,		0.0f, 0.0f,		1.0f, 0.0f, 0.0f,
-
-	1.0f, 1.0f, 1.0f,	0.0f,  1.0f,  0.0f,		1.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-	1.0f, 1.0f,-1.0f,	0.0f,  1.0f,  0.0f,		1.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f,-1.0f,	0.0f,  1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-	1.0f, 1.0f, 1.0f,	0.0f,  1.0f,  0.0f,		1.0f, 0.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f,-1.0f,	0.0f,  1.0f,  0.0f,		0.0f, 1.0f,		0.0f, 1.0f, 0.0f,
-	-1.0f, 1.0f, 1.0f,	0.0f,  1.0f,  0.0f,		0.0f, 0.0f,		0.0f, 1.0f, 0.0f
-	};
-
-	Material cubeMaterials[3] = {
-		{
-			glm::vec3(0.25, 0.20725, 0.20725),
-			glm::vec3(1, 0.829, 0.829),
-			glm::vec3(0.296648,	0.296648, 0.296648),
-			12.f
-		}, // pearl
-		{
-			glm::vec3(0.25, 0.25, 0.25),
-			glm::vec3(0.4, 0.4, 0.4),
-			glm::vec3(0.774597,	0.774597, 0.774597),
-			77.f
-		}, // chrome
-		{
-			glm::vec3(0.1745, 0.01175, 0.01175),
-			glm::vec3(0.61424, 0.04136, 0.04136),
-			glm::vec3(0.727811, 0.626959, 0.626959),
-			77.f
-		} // ruby
-	};
-
-	ModelTransform cubeTrans = {
-	glm::vec3(0.f, 0.f, 0.f),				// position
-	glm::vec3(0.f, 0.f, 0.f),				// rowatation
-	glm::vec3(0.001f, 0.001f, 0.001f) };	// scale
-	;
-	int cubeMat = 0;
-
-#pragma endregion
-
-	Model earth("res/models/earth/earth.obj", true);
-
-	ModelTransform earthTrans = {
-	glm::vec3(0.f, 0.f, 0.f),		// position
-	glm::vec3(0.f, 0.f, 0.f),		// rotation
-	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
-
-#pragma region BUFFERS INITIALIZATION
-
-	vector<std::string> faces
-	{
-		"res\\skyboxes\\space\\right.jpg",
-		"res\\skyboxes\\space\\left.jpg",
-		"res\\skyboxes\\space\\top.jpg",
-		"res\\skyboxes\\space\\bottom.jpg",
-		"res\\skyboxes\\space\\front.jpg",
-		"res\\skyboxes\\space\\back.jpg"
-	};
-	unsigned int cubemapTexture = loadCubemap(faces);
-
-	unsigned int box_texture;
-	glGenTextures(1, &box_texture);
-
-	glBindTexture(GL_TEXTURE_2D, box_texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	if (channels == 3)
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box_width, box_height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	else
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, box_width, box_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-	stbi_image_free(data);
-
-	unsigned int VBO_polygon, VAO_polygon;
-
-	glGenBuffers(1, &VBO_polygon);
-	glGenVertexArrays(1, &VAO_polygon);
-
-	glBindVertexArray(VAO_polygon);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_polygon);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-
-	// position
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	// normal
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	// texture coords
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	// color
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
-	glEnableVertexAttribArray(3);
-	
-#pragma endregion
 	Shader* shader			= new Shader("shaders/7.bloom.vert", "shaders/7.bloom.frag");
 	Shader* shaderLight		= new Shader("shaders/7.bloom.vert", "shaders/7.light_box.frag");
 	Shader* shaderBlur		= new Shader("shaders/7.blur.vert", "shaders/7.blur.frag");
@@ -293,6 +152,59 @@ int main()
 	glm::vec3(0.f, 0.f, 0.f),			// rotation
 	glm::vec3(0.05f, 0.05f, 0.05f) };	// scale
 #pragma endregion
+
+
+#pragma region CUBES
+	int cubeMat = 0;
+	Material cubeMaterials[3] = {
+		{
+			glm::vec3(0.25, 0.20725, 0.20725),
+			glm::vec3(1, 0.829, 0.829),
+			glm::vec3(0.296648,	0.296648, 0.296648),
+			12.f
+		}, // pearl
+		{
+			glm::vec3(0.25, 0.25, 0.25),
+			glm::vec3(0.4, 0.4, 0.4),
+			glm::vec3(0.774597,	0.774597, 0.774597),
+			77.f
+		}, // chrome
+		{
+			glm::vec3(0.1745, 0.01175, 0.01175),
+			glm::vec3(0.61424, 0.04136, 0.04136),
+			glm::vec3(0.727811, 0.626959, 0.626959),
+			77.f
+		} // ruby
+	};
+
+	ModelTransform cubeTrans = {
+	glm::vec3(0.f, 0.f, 0.f),				// position
+	glm::vec3(0.f, 0.f, 0.f),				// rowatation
+	glm::vec3(0.001f, 0.001f, 0.001f) };	// scale
+	;
+
+#pragma endregion
+
+	unsigned int box_texture = loadTexture("res\\images\\box.png", true);
+
+	Model earth("res/models/earth/earth.obj", true);
+
+	ModelTransform earthTrans = {
+	glm::vec3(0.f, 0.f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
+	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
+
+
+	vector<std::string> skyboxTexFaces
+	{
+		"res\\skyboxes\\space\\right.jpg",
+		"res\\skyboxes\\space\\left.jpg",
+		"res\\skyboxes\\space\\top.jpg",
+		"res\\skyboxes\\space\\bottom.jpg",
+		"res\\skyboxes\\space\\front.jpg",
+		"res\\skyboxes\\space\\back.jpg"
+	};
+	unsigned int cubemapTexture = loadCubemap(skyboxTexFaces);
 
 	double oldTime = glfwGetTime(), newTime, deltaTime;
 
@@ -375,8 +287,7 @@ int main()
 		polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat].shininess);
 		
 		glBindTexture(GL_TEXTURE_2D, box_texture);
-		glBindVertexArray(VAO_polygon);
-		glDrawArrays(GL_TRIANGLES, 0, verts);
+		renderCube();
 
 #pragma region skybox 
 		// draw skybox as last
@@ -389,16 +300,13 @@ int main()
 		skybox_shader->setMatrix4F("pv", pv);
 
 		// skybox cube
-		glBindVertexArray(VAO_polygon);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-		glBindVertexArray(0);
+		renderCube();
 
 		// DRAWING LAMPS
 		light_shader->use();
 		light_shader->setMatrix4F("pv", pv);
-		glBindVertexArray(VAO_polygon);
 
 		// Sun
 		lightTrans.position = sunLight->position;
@@ -410,8 +318,8 @@ int main()
 		model = glm::scale(model, glm::vec3(5.f, 5.f, 5.f));
 		light_shader->setMatrix4F("model", model);
 		light_shader->setVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
-		glDrawArrays(GL_TRIANGLES, 0, verts);
-
+		renderCube();
+		
 		glCullFace(GL_BACK);
 		glDepthFunc(GL_LESS); // set depth function back to default
 #pragma endregion
@@ -496,7 +404,7 @@ void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods)
 			mode = !mode;
 			glfwGetCursorPos(win, &mouseXtmp, &mouseYtmp);
 			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-			glfwSetCursorPos(win, resolution.h / 2, resolution.w / 2);
+			glfwSetCursorPos(win, RESOLUTION.HEIGHT / 2, RESOLUTION.WIDTH / 2);
 			mouseLeftPress = true;
 		}
 		else if (action == GLFW_RELEASE)
@@ -504,8 +412,8 @@ void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods)
 			mode = !mode;
 			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			glfwSetCursorPos(win, mouseXtmp, mouseYtmp);
-			mouseX = resolution.h / 2;
-			mouseY = resolution.w / 2;
+			mouseX = RESOLUTION.HEIGHT / 2;
+			mouseY = RESOLUTION.WIDTH / 2;
 			mouseLeftPress = false;
 		}
 	}
@@ -516,15 +424,15 @@ void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods)
 		{
 			glfwGetCursorPos(win, &mouseXtmp, &mouseYtmp);
 			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-			glfwSetCursorPos(win, resolution.h / 2, resolution.w / 2);
+			glfwSetCursorPos(win, RESOLUTION.HEIGHT / 2, RESOLUTION.WIDTH / 2);
 			mouseRightPress = true;
 		}
 		else if (action == GLFW_RELEASE)
 		{
 			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			glfwSetCursorPos(win, mouseXtmp, mouseYtmp);
-			mouseX = resolution.h / 2;
-			mouseY = resolution.w / 2;
+			mouseX = RESOLUTION.HEIGHT / 2;
+			mouseY = RESOLUTION.WIDTH / 2;
 			mouseRightPress = false;
 		}
 	}
@@ -604,4 +512,164 @@ void UpdatePolygoneMode()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+// ¬спомогательна€ функци€ загрузки 2D-текстур из файла
+unsigned int loadTexture(char const* path, bool gammaCorrection)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+
+	int width, height, nrComponents;
+	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+	if (data)
+	{
+		GLenum internalFormat;
+		GLenum dataFormat;
+		if (nrComponents == 1)
+		{
+			internalFormat = dataFormat = GL_RED;
+		}
+		else if (nrComponents == 3)
+		{
+			internalFormat = gammaCorrection ? GL_SRGB : GL_RGB;
+			dataFormat = GL_RGB;
+		}
+		else if (nrComponents == 4)
+		{
+			internalFormat = gammaCorrection ? GL_SRGB_ALPHA : GL_RGBA;
+			dataFormat = GL_RGBA;
+		}
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Texture failed to load at path: " << path << std::endl;
+		stbi_image_free(data);
+	}
+
+	return textureID;
+}
+
+// renderCube() рендерит 1x1 3D-€щик в NDC
+void renderCube()
+{
+	static unsigned int cubeVAO = 0;
+	static unsigned int cubeVBO = 0;
+	// »нициализаци€ (если необходимо)
+	if (cubeVAO == 0)
+	{
+		float vertices[] = {
+			// задн€€ грань
+		   -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // нижн€€-лева€
+			1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // верхн€€-права€
+			1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // нижн€€-права€         
+			1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // верхн€€-права€
+		   -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // нижн€€-лева€
+		   -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // верхн€€-лева€
+
+			// передн€€ грань
+		   -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // нижн€€-лева€
+			1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // нижн€€-права€
+			1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // верхн€€-права€
+			1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // верхн€€-права€
+		   -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // верхн€€-лева€
+		   -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // нижн€€-лева€
+
+			// грань слева
+		   -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // верхн€€-права€
+		   -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // верхн€€-лева€
+		   -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // нижн€€-лева€
+		   -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // нижн€€-лева€
+		   -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // нижн€€-права€
+		   -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // верхн€€-права€
+
+			// грань справа
+			1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // верхн€€-лева€
+			1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // нижн€€-права€
+			1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // верхн€€-права€         
+			1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // нижн€€-права€
+			1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // верхн€€-лева€
+			1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // нижн€€-лева€     
+
+			// нижн€€ грань
+		   -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // верхн€€-права€
+			1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // верхн€€-лева€
+			1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // нижн€€-лева€
+			1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // нижн€€-лева€
+		   -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // нижн€€-права€
+		   -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // верхн€€-права€
+
+			// верхн€€ грань
+		   -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // верхн€€-лева€
+			1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // нижн€€-права€
+			1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // верхн€€-права€     
+			1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // нижн€€-права€
+		   -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // верхн€€-лева€
+		   -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // нижн€€-лева€        
+		};
+		glGenVertexArrays(1, &cubeVAO);
+		glGenBuffers(1, &cubeVBO);
+
+		// «аполн€ем буфер
+		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		// —в€зываем вершинные атрибуты
+		glBindVertexArray(cubeVAO);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+
+	// –ендер €щика
+	glBindVertexArray(cubeVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+}
+
+// renderQuad() рендерит 1x1 XY-пр€моугольник в NDC
+void renderQuad()
+{
+	static unsigned int quadVAO = 0;
+	static unsigned int quadVBO;
+	if (quadVAO == 0)
+	{
+		float quadVertices[] = {
+			// координаты      // текстурные коодинаты
+		   -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+		   -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+			1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+			1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		};
+
+		// ”становка VAO плоскости
+		glGenVertexArrays(1, &quadVAO);
+		glGenBuffers(1, &quadVBO);
+		glBindVertexArray(quadVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	}
+	glBindVertexArray(quadVAO);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	glBindVertexArray(0);
 }

@@ -50,11 +50,11 @@ bool mouseLeftPress, mouseRightPress, mouseMiddlePress;
 
 struct
 {
-	int HEIGHT;
 	int WIDTH;
+	int HEIGHT;
 } RESOLUTION = { 1280, 720 };
 
-double mouseX = RESOLUTION.HEIGHT / 2, mouseY = RESOLUTION.WIDTH / 2, mouseXtmp = 0, mouseYtmp = 0;
+double mouseX = RESOLUTION.WIDTH / 2, mouseY = RESOLUTION.HEIGHT / 2, mouseXtmp = 0, mouseYtmp = 0;
 
 void UpdatePolygoneMode();
 unsigned int loadCubemap(vector<std::string> faces);
@@ -80,7 +80,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* win = glfwCreateWindow(RESOLUTION.HEIGHT, RESOLUTION.WIDTH, "OpenGL Window", NULL, NULL);
+	GLFWwindow* win = glfwCreateWindow(RESOLUTION.WIDTH, RESOLUTION.HEIGHT, "OpenGL Window", NULL, NULL);
 	if (win == NULL)
 	{
 		std::cout << "Error. Couldn't create window!" << std::endl;
@@ -100,7 +100,7 @@ int main()
 	glfwSetKeyCallback(win, OnKeyAction);
 	glfwSetMouseButtonCallback(win, OnMouseKeyAction);
 	glfwSetCursorPosCallback(win, OnMouseMoutionAction);
-	glViewport(0, 0, RESOLUTION.HEIGHT, RESOLUTION.WIDTH);
+	glViewport(0, 0, RESOLUTION.WIDTH, RESOLUTION.HEIGHT);
 	glEnable(GL_DEPTH_TEST);
 	glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	UpdatePolygoneMode();
@@ -111,15 +111,66 @@ int main()
 
 #pragma endregion
 
-	Shader* shader			= new Shader("shaders/7.bloom.vert", "shaders/7.bloom.frag");
-	Shader* shaderLight		= new Shader("shaders/7.bloom.vert", "shaders/7.light_box.frag");
-	Shader* shaderBlur		= new Shader("shaders/7.blur.vert", "shaders/7.blur.frag");
-	Shader* shaderBloomFinal= new Shader("shaders/7.bloom_final.vert", "shaders/7.bloom_final.frag");
+#pragma region BUFFERS INITIALIZATION
 
-	Shader* polygon_shader	= new Shader("shaders\\basic.vert", "shaders\\basic.frag");
-	Shader* light_shader	= new Shader("shaders\\light.vert", "shaders\\light.frag");
-	Shader* earth_shader	= new Shader("shaders\\earth.vert", "shaders\\earth.frag");
-	Shader* skybox_shader	= new Shader("shaders\\skybox.vert", "shaders\\skybox.frag");
+	// Конфигурирование фреймбуферов (типа с плавающей точкой)
+	unsigned int hdrFBO;
+	glGenFramebuffers(1, &hdrFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+
+	// Создаем 2 цветовых фреймбуфера типа с плавающей точкой (первый - для обычного рендеринга, другой - для граничных значений яркости)
+	unsigned int colorBuffers[2];
+	glGenTextures(2, colorBuffers);
+	for (unsigned int i = 0; i < 2; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, RESOLUTION.WIDTH, RESOLUTION.HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  //используем режим GL_CLAMP_TO_EDGE, т.к. в противном случае фильтр размытия производил бы выборку повторяющихся значений текстуры!
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+		// Прикрепляем текстуру к фреймбуферу
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0);
+	}
+
+	// Создаем и прикрепляем буфер глубины (рендербуфер)
+	unsigned int rboDepth;
+	glGenRenderbuffers(1, &rboDepth);
+	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, RESOLUTION.WIDTH, RESOLUTION.HEIGHT);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
+
+	// Сообщаем OpenGL, какой прикрепленный цветовой буфер мы будем использовать для рендеринга
+	unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(2, attachments);
+
+	// Проверяем готовность фреймбуфера
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// ping-pong-фреймбуфер для размытия
+	unsigned int pingpongFBO[2];
+	unsigned int pingpongColorbuffers[2];
+	glGenFramebuffers(2, pingpongFBO);
+	glGenTextures(2, pingpongColorbuffers);
+	for (unsigned int i = 0; i < 2; i++)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+		glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, RESOLUTION.WIDTH, RESOLUTION.HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // используем режим GL_CLAMP_TO_EDGE, т.к. в противном случае фильтр размытия производил бы выборку повторяющихся значений текстуры!
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorbuffers[i], 0);
+
+		// Также проверяем, готовы ли фреймбуферы (буфер глубины нам не нужен)
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+			std::cout << "Framebuffer not complete!" << std::endl;
+	}
+#pragma endregion
 
 #pragma region LIGHT INITIALIZATION
 
@@ -153,9 +204,8 @@ int main()
 	glm::vec3(0.05f, 0.05f, 0.05f) };	// scale
 #pragma endregion
 
-
 #pragma region CUBES
-	int cubeMat = 0;
+	int cubeMat = 2;
 	Material cubeMaterials[3] = {
 		{
 			glm::vec3(0.25, 0.20725, 0.20725),
@@ -181,12 +231,11 @@ int main()
 	glm::vec3(0.f, 0.f, 0.f),				// position
 	glm::vec3(0.f, 0.f, 0.f),				// rowatation
 	glm::vec3(0.001f, 0.001f, 0.001f) };	// scale
-	;
-
+	
+	unsigned int box_texture = loadTexture("res\\images\\box.png", true);
 #pragma endregion
 
-	unsigned int box_texture = loadTexture("res\\images\\box.png", true);
-
+	//earth
 	Model earth("res/models/earth/earth.obj", true);
 
 	ModelTransform earthTrans = {
@@ -194,7 +243,7 @@ int main()
 	glm::vec3(0.f, 0.f, 0.f),		// rotation
 	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
 
-
+	//skybox
 	vector<std::string> skyboxTexFaces
 	{
 		"res\\skyboxes\\space\\right.jpg",
@@ -206,15 +255,24 @@ int main()
 	};
 	unsigned int cubemapTexture = loadCubemap(skyboxTexFaces);
 
-	double oldTime = glfwGetTime(), newTime, deltaTime;
+	Shader* shaderBlur = new Shader("shaders/7.blur.vert", "shaders/7.blur.frag");
+	Shader* shaderBloomFinal = new Shader("shaders/7.bloom_final.vert", "shaders/7.bloom_final.frag");
 
-
+	Shader* polygon_shader = new Shader("shaders\\basic.vert", "shaders\\basic.frag");
+	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
+	Shader* earth_shader = new Shader("shaders\\earth.vert", "shaders\\earth.frag");
+	Shader* skybox_shader = new Shader("shaders\\skybox.vert", "shaders\\skybox.frag");
 
 	shaderBlur->use();
 	shaderBlur->setInt("image", 0);
 	shaderBloomFinal->use();
 	shaderBloomFinal->setInt("scene", 0);
 	shaderBloomFinal->setInt("bloomBlur", 1);
+
+	double oldTime = glfwGetTime(), newTime, deltaTime;
+
+
+
 
 	while (!glfwWindowShouldClose(win))
 	{
@@ -224,21 +282,18 @@ int main()
 
 		processInput(win, deltaTime);
 
-		glClearColor(0.1f, .1f, .1f, 1.f);
+		glClearColor(0.f, 0.f, 0.f, 1.f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
+		glClearColor(0.f, 0.f, 0.f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 p = camera.GetProjectionMatrix();
-		glm::mat4 v;
-		switch (mode)
-		{
-		case 0:
-			v = camera.GetViewMatrix();
-			break;
-		case 1:
-			v = camera.GetViewMatrix();
+		glm::mat4 v = camera.GetViewMatrix();
+		if (mode) {
 			v = glm::rotate(v, glm::radians(cameraAngleX), glm::vec3(0.f, 1.f, 0.f));
 			v = glm::rotate(v, glm::radians(cameraAngleY), glm::vec3(0.f, 1.f, 0.f));
-			break;
 		}
 		glm::mat4 pv = p * v;
 		glm::mat4 model;
@@ -249,7 +304,7 @@ int main()
 		// DRAWING EARTH
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, earthTrans.position);
-		model = glm::rotate(model, glm::radians(earthTrans.rotation.y > 360 ? earthTrans.rotation.y -= 360 : earthTrans.rotation.y += 0.1f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(earthTrans.rotation.y > 360 ? earthTrans.rotation.y -= 360 - 0.1f : earthTrans.rotation.y += 0.1f), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, earthTrans.scale);
 		earth_shader->use();
 		earth_shader->setMatrix4F("pv", pv);
@@ -267,29 +322,29 @@ int main()
 		glDisable(GL_BLEND);
 
 		// DRAWING BOX
-		polygon_shader->use();
-		polygon_shader->setMatrix4F("pv", pv);
-		polygon_shader->setBool("wireframeMode", wireframeMode);
-		polygon_shader->setVec3("viewPos", camera.Position);
-		
-		active_lights = 0;
-		for (int i = 0; i < lights.size(); i++)
-			active_lights += lights[i]->putInShader(polygon_shader, active_lights);
-		polygon_shader->setInt("lights_count", active_lights);
-		
-		model = glm::scale(model, glm::vec3(3.f, 3.f, 3.f));
-		
-		polygon_shader->setMatrix4F("model", model);
-		
-		polygon_shader->setVec3("material.ambient", cubeMaterials[cubeMat].ambient);
-		polygon_shader->setVec3("material.diffuse", cubeMaterials[cubeMat].diffuse);
-		polygon_shader->setVec3("material.specular", cubeMaterials[cubeMat].specular);
-		polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat].shininess);
-		
-		glBindTexture(GL_TEXTURE_2D, box_texture);
-		renderCube();
+		//polygon_shader->use();
+		//polygon_shader->setMatrix4F("pv", pv);
+		//polygon_shader->setVec3("viewPos", camera.Position);
+		//
+		//active_lights = 0;
+		//for (int i = 0; i < lights.size(); i++)
+		//	active_lights += lights[i]->putInShader(polygon_shader, active_lights);
+		//polygon_shader->setInt("lights_count", active_lights);
+		//
+		//model = glm::scale(model, glm::vec3(3.f, 3.f, 3.f));
+		//
+		//polygon_shader->setMatrix4F("model", model);
+		//
+		//polygon_shader->setVec3("material.ambient", cubeMaterials[cubeMat].ambient);
+		//polygon_shader->setVec3("material.diffuse", cubeMaterials[cubeMat].diffuse);
+		//polygon_shader->setVec3("material.specular", cubeMaterials[cubeMat].specular);
+		//polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat].shininess);
+		//
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, box_texture);
+		//renderCube();
 
-#pragma region skybox 
+#pragma region background
 		// draw skybox as last
 		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
 		glCullFace(GL_FRONT);
@@ -315,14 +370,43 @@ int main()
 		//model = glm::rotate(model, glm::radians(lightTrans.rotation.z == 360 ? lightTrans.rotation.z -= 360 : lightTrans.rotation.z += 10.f), glm::vec3(0.f, 1.f, 0.f));
 
 		model = glm::scale(model, lightTrans.scale);
-		model = glm::scale(model, glm::vec3(5.f, 5.f, 5.f));
+		//model = glm::scale(model, glm::vec3(5.f, 5.f, 5.f));
 		light_shader->setMatrix4F("model", model);
-		light_shader->setVec3("lightColor", glm::vec3(1.0f, 1.f, 1.f));
+		light_shader->setVec3("lightColor", glm::vec3(1.f, 1.f, 1.f));
 		renderCube();
 		
 		glCullFace(GL_BACK);
 		glDepthFunc(GL_LESS); // set depth function back to default
 #pragma endregion
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// 2. Размываем яркие фрагменты с помощью двухпроходного размытия по Гауссу
+		bool horizontal = true, first_iteration = true;
+		unsigned int amount = 10;
+		shaderBlur->use();
+		for (unsigned int i = 0; i < amount; i++)
+		{
+			glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+			shaderBlur->setInt("horizontal", horizontal);
+			glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]);  // привязка текстуры другого фреймбуфера (или сцены, если это - первая итерация)
+			renderQuad();
+			horizontal = !horizontal;
+			if (first_iteration)
+				first_iteration = false;
+		}
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		// 3. Теперь рендерим цветовой буфер (типа с плавающей точкой) на 2D-прямоугольник и сужаем диапазон значений HDR-цветов к цветовому диапазону значений заданного по умолчанию фреймбуфера
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		shaderBloomFinal->use();
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
+		shaderBloomFinal->setInt("bloom", true);
+		shaderBloomFinal->setFloat("exposure", 1.f);
+		renderQuad();
 
 		glfwSwapBuffers(win);
 		glfwPollEvents();
@@ -341,6 +425,14 @@ int main()
 void OnResize(GLFWwindow* win, int width, int height)
 {
 	glViewport(0, 0, width, height);
+}
+
+void UpdatePolygoneMode()
+{
+	if (wireframeMode)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	else
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void processInput(GLFWwindow* win, double dt)
@@ -504,14 +596,6 @@ unsigned int loadCubemap(vector<std::string> faces)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	return textureID;
-}
-
-void UpdatePolygoneMode()
-{
-	if (wireframeMode)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	else
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 // Вспомогательная функция загрузки 2D-текстур из файла

@@ -44,7 +44,7 @@ struct Material
 	float shininess;
 };
 
-Camera camera(glm::vec3(-1.f, 0.f, 0.5f), glm::vec3(0.f, 1.0f, 0.f), -30, 0);
+Camera camera(glm::vec3(-1.4f, 0.4f, 0.8f), glm::vec3(0.f, 1.0f, 0.f), -30, 0);
 
 Light* flashLight, * sunLight;
 bool wireframeMode = false;
@@ -179,7 +179,7 @@ int main()
 
 	sunLight = new Light("Sun", true);
 	sunLight->initLikePointLight(
-		glm::vec3(-0.9f, 0.445f, -0.44f),	//position
+		glm::vec3(-100.f, 49.0f, -49.f),	//position
 		glm::vec3(0.001f, 0.001f, 0.001f),	//ambient
 		glm::vec3(1.f, 1.f, .8f),			//diffuse
 		glm::vec3(0.0f, 0.0f, 0.0f),		//specular
@@ -198,9 +198,9 @@ int main()
 	//lights.push_back(flashLight);
 
 	ModelTransform lightTrans = {
-	glm::vec3(0.f, 0.f, 0.f),			// position
-	glm::vec3(0.f, 0.f, 0.f),			// rotation
-	glm::vec3(0.05f, 0.05f, 0.05f) };	// scale
+	glm::vec3(0.f, 0.f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
+	glm::vec3(6.f, 6.f, 6.f) };		// scale
 #pragma endregion
 
 #pragma region OBJECTS INITIALIZATION
@@ -244,6 +244,12 @@ int main()
 	//glm::vec3(0.01f, 0.01f, 0.01f) };	// scale
 	//
 	//glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
+	Model moon("res/models/moon/moon.obj", true);
+
+	ModelTransform moonTrans = {
+	glm::vec3(0.f, 0.5f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
+	glm::vec3(0.2f, 0.2f, 0.2f) };	// scale
 
 	//earth
 	Model earth("res/models/earth/earth.obj", true);
@@ -269,7 +275,8 @@ int main()
 #pragma region SHADERS INITIALIZATION
 	Shader* polygon_shader = new Shader("shaders/basic.vert", "shaders/basic.frag");
 	Shader* light_shader = new Shader("shaders/light.vert", "shaders/light.frag");
-	Shader* earth_shader = new Shader("shaders/earth.vert", "shaders/earth.frag");
+	Shader* earth_shader = new Shader("shaders/model.vert", "shaders/model_earth.frag");
+	Shader* moon_shader = new Shader("shaders/model.vert", "shaders/model_moon.frag");
 	Shader* skybox_shader = new Shader("shaders/skybox.vert", "shaders/skybox.frag");
 	Shader* shaderBlur = new Shader("shaders/7.blur.vert", "shaders/7.blur.frag");
 	Shader* shaderBloomFinal = new Shader("shaders/7.bloom_final.vert", "shaders/7.bloom_final.frag");
@@ -310,7 +317,7 @@ int main()
 		flashLight->position = camera.Position - camera.Up * 0.01f;
 		flashLight->direction = camera.Front;
 
-		// DRAWING EARTH
+// DRAWING EARTH
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, earthTrans.position);
 		model = glm::rotate(model, glm::radians(earthTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
@@ -328,10 +335,30 @@ int main()
 		earth_shader->setInt("lights_count", active_lights);
 		earth.Draw(earth_shader);
 
+// DRAWING MOON
+		model = glm::mat4(1.0f);
+		moonTrans.position.x = 1.f * cosf(float(newTime));
+		moonTrans.position.z = 1.f * sinf(float(newTime));
+		model = glm::translate(model, moonTrans.position);
+		model = glm::rotate(model, glm::radians(moonTrans.rotation.y >= 360 ? moonTrans.rotation.y -= 360 - 0.1f : moonTrans.rotation.y += 0.1f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::scale(model, moonTrans.scale);
+		
+		moon_shader->use();
+		moon_shader->setMatrix4F("pv", pv);
+		moon_shader->setMatrix4F("model", model);
+		moon_shader->setVec3("viewPos", camera.Position);
+
+		active_lights = 0;
+		for (int i = 0; i < lights.size(); i++)
+			active_lights += lights[i]->putInShader(moon_shader, active_lights);
+		moon_shader->setInt("lights_count", active_lights);
+
+		moon.Draw(moon_shader);
+
 		//model = glm::mat4(1.0f);
 		//direction = (meteorTrans.position - earthTrans.position);
 		//model = glm::translate(model, meteorTrans.position -= direction * (float)deltaTime * 0.5f);
-		//model = glm::rotate(model, glm::radians(meteorTrans.rotation.y >= 360 ? meteorTrans.rotation.x -= 360 - 0.1f : meteorTrans.rotation.x += 0.05f), glm::vec3(1.f, 0.f, 0.f));
+		//model = glm::rotate(model, glm::radians(meteorTrans.rotation.x >= 360 ? meteorTrans.rotation.x -= 360 - 0.1f : meteorTrans.rotation.x += 0.05f), glm::vec3(1.f, 0.f, 0.f));
 		//model = glm::rotate(model, glm::radians(meteorTrans.rotation.y >= 360 ? meteorTrans.rotation.y -= 360 - 0.1f : meteorTrans.rotation.y += 0.01f), glm::vec3(0.f, 1.f, 0.f));
 		//model = glm::rotate(model, glm::radians(meteorTrans.rotation.z >= 360 ? meteorTrans.rotation.z -= 360 - 0.1f : meteorTrans.rotation.z += 0.1f), glm::vec3(0.f, 0.f, 1.f));
 		//model = glm::scale(model, meteorTrans.scale);
@@ -363,7 +390,7 @@ int main()
 		//renderCube();
 
 #pragma region background
-		// draw skybox as last
+// DRAWING SKYBOX as last
 		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
 		glCullFace(GL_FRONT);
 
@@ -380,8 +407,9 @@ int main()
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 		renderCube();
+		glCullFace(GL_BACK);
 
-		// DRAWING LAMPS
+// DRAWING LAMPS
 		light_shader->use();
 		light_shader->setMatrix4F("pv", pv);
 
@@ -389,20 +417,19 @@ int main()
 		lightTrans.position = sunLight->position;
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightTrans.position);
-		model = glm::rotate(model, glm::radians(lightTrans.rotation.y >= 360 ? lightTrans.rotation.y -= 360.f - 20.f : lightTrans.rotation.y += 20.f), glm::vec3(0.f, 1.f, 0.f));
+		//model = glm::rotate(model, glm::radians(lightTrans.rotation.y >= 360 ? lightTrans.rotation.y -= 360.f - 20.f : lightTrans.rotation.y += 20.f), glm::vec3(0.f, 1.f, 0.f));
 
 		model = glm::scale(model, lightTrans.scale);
 		light_shader->setMatrix4F("model", model);
 		light_shader->setVec3("lightColor", glm::vec3(1.f, 1.f, 1.f));
 		renderCube();
-
-		glCullFace(GL_BACK);
 		glDepthFunc(GL_LESS); // set depth function back to default
+
 #pragma endregion
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		// 2. Размываем яркие фрагменты с помощью двухпроходного размытия по Гауссу
+		// Размываем яркие фрагменты с помощью двухпроходного размытия по Гауссу
 		bool horizontal = true, first_iteration = true;
 		unsigned int amount = 40;
 		shaderBlur->use();
@@ -481,7 +508,7 @@ void processInput(GLFWwindow* win, double dt)
 	if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
 		dir |= CAM_RIGHT;
 
-	camera.Move(dir, dt);
+	camera.Move(dir, float(dt));
 
 	if (glfwGetKey(win, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
@@ -570,8 +597,8 @@ void OnMouseMoutionAction(GLFWwindow* win, double x, double y)
 		glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		double newx = 0.f, newy = 0.f;
 		glfwGetCursorPos(win, &newx, &newy);
-		cameraAngleX += newx - mouseX;
-		cameraAngleY += newy - mouseY;
+		cameraAngleX += float(newx - mouseX);
+		cameraAngleY += float(newy - mouseY);
 		mouseX = newx;
 		mouseY = newy;
 	}
@@ -580,8 +607,8 @@ void OnMouseMoutionAction(GLFWwindow* win, double x, double y)
 		glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		double newx = 0.f, newy = 0.f;
 		glfwGetCursorPos(win, &newx, &newy);
-		double xoffset = newx - mouseX;
-		double yoffset = newy - mouseY;
+		float xoffset = float(newx - mouseX);
+		float yoffset = float(newy - mouseY);
 		mouseX = newx;
 		mouseY = newy;
 
@@ -630,8 +657,8 @@ unsigned int loadTexture(char const* path, bool gammaCorrection)
 	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
 	if (data)
 	{
-		GLenum internalFormat;
-		GLenum dataFormat;
+		GLenum internalFormat = 0;
+		GLenum dataFormat = 0;
 		if (nrComponents == 1)
 		{
 			internalFormat = dataFormat = GL_RED;

@@ -110,14 +110,11 @@ void main()
                 }
             }
         }
-        outColor += vec4(lresult, 1.0f);
-
     //float brightness = dot(lresult, vec3(0.2126, 0.7152, 0.0722));
     //if(brightness < 1.0)
     //    brightColor = vec4(0.0, 0.0, 0.0, 1.0);
     //else
-        //brightColor += vec4(66.f,170.f,255.f, 1.0f);
-    //    brightColor = vec4(0.0, 0.0, 0.0, 1.0);
+        brightColor += vec4(lresult, 1.0f);
     outColor += vec4(lresult, 1.0f);
 
     }// end of for

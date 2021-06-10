@@ -19,6 +19,8 @@
 #include "Light.h"
 
 typedef unsigned char byte;
+#define SCR_WIDTH 1920
+#define SCR_HEIGHT 1080
 
 struct ModelTransform
 {
@@ -42,19 +44,13 @@ struct Material
 	float shininess;
 };
 
-Camera camera(glm::vec3(-0.9f, 0.f, -0.44f), glm::vec3(0.f, 1.0f, 0.f), 20, 0);
+Camera camera(glm::vec3(-1.f, 0.f, 0.5f), glm::vec3(0.f, 1.0f, 0.f), -30, 0);
 
 Light* flashLight, * sunLight;
 bool wireframeMode = false;
+
+double mouseX = SCR_WIDTH / 2, mouseY = SCR_HEIGHT / 2, mouseXtmp = 0, mouseYtmp = 0;
 bool mouseLeftPress, mouseRightPress, mouseMiddlePress;
-
-struct
-{
-	int WIDTH;
-	int HEIGHT;
-} RESOLUTION = { 1280, 720 };
-
-double mouseX = RESOLUTION.WIDTH / 2, mouseY = RESOLUTION.HEIGHT / 2, mouseXtmp = 0, mouseYtmp = 0;
 
 void UpdatePolygoneMode();
 unsigned int loadCubemap(vector<std::string> faces);
@@ -72,6 +68,9 @@ void renderQuad();
 bool mode = 0;
 float cameraAngleX, cameraAngleY;
 
+
+ModelTransform meteorTrans;
+
 int main()
 {
 #pragma region WINDOW INITIALIZATION
@@ -80,7 +79,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* win = glfwCreateWindow(RESOLUTION.WIDTH, RESOLUTION.HEIGHT, "OpenGL Window", NULL, NULL);
+	GLFWwindow* win = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL Window", NULL, NULL);
 	if (win == NULL)
 	{
 		std::cout << "Error. Couldn't create window!" << std::endl;
@@ -100,14 +99,15 @@ int main()
 	glfwSetKeyCallback(win, OnKeyAction);
 	glfwSetMouseButtonCallback(win, OnMouseKeyAction);
 	glfwSetCursorPosCallback(win, OnMouseMoutionAction);
-	glViewport(0, 0, RESOLUTION.WIDTH, RESOLUTION.HEIGHT);
+	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	glEnable(GL_DEPTH_TEST);
 	glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	UpdatePolygoneMode();
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
 
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 #pragma endregion
 
@@ -124,7 +124,7 @@ int main()
 	for (unsigned int i = 0; i < 2; i++)
 	{
 		glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, RESOLUTION.WIDTH, RESOLUTION.HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  //используем режим GL_CLAMP_TO_EDGE, т.к. в противном случае фильтр размыти€ производил бы выборку повтор€ющихс€ значений текстуры!
@@ -138,7 +138,7 @@ int main()
 	unsigned int rboDepth;
 	glGenRenderbuffers(1, &rboDepth);
 	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, RESOLUTION.WIDTH, RESOLUTION.HEIGHT);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
 
 	// —ообщаем OpenGL, какой прикрепленный цветовой буфер мы будем использовать дл€ рендеринга
@@ -159,7 +159,7 @@ int main()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
 		glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, RESOLUTION.WIDTH, RESOLUTION.HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // используем режим GL_CLAMP_TO_EDGE, т.к. в противном случае фильтр размыти€ производил бы выборку повтор€ющихс€ значений текстуры!
@@ -180,8 +180,8 @@ int main()
 	sunLight = new Light("Sun", true);
 	sunLight->initLikePointLight(
 		glm::vec3(-0.9f, 0.445f, -0.44f),	//position
-		glm::vec3(0.f, 0.f, 0.f),			//ambient
-		glm::vec3(0.6f, 0.6f, .4f),			//diffuse
+		glm::vec3(0.001f, 0.001f, 0.001f),			//ambient
+		glm::vec3(1.f, 1.f, .8f),			//diffuse
 		glm::vec3(0.0f, 0.0f, 0.0f),		//specular
 		1.0f, 0.f, 0.0f);
 	lights.push_back(sunLight);
@@ -236,12 +236,21 @@ int main()
 	unsigned int box_texture = loadTexture("res\\images\\box.png", true);
 #pragma endregion
 
+	//Model meteor("res/models/meteorite/meteoriteobj.obj", true);
+	//
+	//meteorTrans = {
+	//glm::vec3(-0.5f, 0.f, -0.5f),		// position
+	//glm::vec3(0.f, 0.f, 0.f),			// rotation
+	//glm::vec3(0.01f, 0.01f, 0.01f) };	// scale
+	//
+	//glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
+
 	//earth
 	Model earth("res/models/earth/earth.obj", true);
 
 	ModelTransform earthTrans = {
 	glm::vec3(0.f, 0.f, 0.f),		// position
-	glm::vec3(0.f, 0.f, 0.f),		// rotation
+	glm::vec3(0.f, 0.f, -10.f),		// rotation
 	glm::vec3(0.1f, 0.1f, 0.1f) };	// scale
 
 	//skybox
@@ -308,7 +317,8 @@ int main()
 		// DRAWING EARTH
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, earthTrans.position);
-		model = glm::rotate(model, glm::radians(earthTrans.rotation.y > 360 ? earthTrans.rotation.y -= 360 - 0.1f : earthTrans.rotation.y += 0.1f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(earthTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
+		model = glm::rotate(model, glm::radians(earthTrans.rotation.y >= 360 ? earthTrans.rotation.y -= 360 - 0.1f : earthTrans.rotation.y += 0.1f), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, earthTrans.scale);
 		earth_shader->use();
 		earth_shader->setMatrix4F("pv", pv);
@@ -320,10 +330,18 @@ int main()
 			active_lights += lights[i]->putInShader(earth_shader, active_lights);
 
 		earth_shader->setInt("lights_count", active_lights);
-
-		glEnable(GL_BLEND);
 		earth.Draw(earth_shader);
-		glDisable(GL_BLEND);
+
+		//model = glm::mat4(1.0f);
+		//direction = (meteorTrans.position - earthTrans.position);
+		//model = glm::translate(model, meteorTrans.position -= direction * (float)deltaTime * 0.5f);
+		//model = glm::rotate(model, glm::radians(meteorTrans.rotation.y >= 360 ? meteorTrans.rotation.x -= 360 - 0.1f : meteorTrans.rotation.x += 0.05f), glm::vec3(1.f, 0.f, 0.f));
+		//model = glm::rotate(model, glm::radians(meteorTrans.rotation.y >= 360 ? meteorTrans.rotation.y -= 360 - 0.1f : meteorTrans.rotation.y += 0.01f), glm::vec3(0.f, 1.f, 0.f));
+		//model = glm::rotate(model, glm::radians(meteorTrans.rotation.z >= 360 ? meteorTrans.rotation.z -= 360 - 0.1f : meteorTrans.rotation.z += 0.1f), glm::vec3(0.f, 0.f, 1.f));
+		//model = glm::scale(model, meteorTrans.scale);
+		//
+		//earth_shader->setMatrix4F("model", model);
+		//meteor.Draw(earth_shader);
 
 		// DRAWING BOX
 		//polygon_shader->use();
@@ -354,6 +372,10 @@ int main()
 		glCullFace(GL_FRONT);
 
 		v = glm::mat4(glm::mat3(camera.GetViewMatrix())); // remove translation from the view matrix
+		if (mode) {
+			v = glm::rotate(v, glm::radians(cameraAngleX), glm::vec3(0.f, 1.f, 0.f));
+			v = glm::rotate(v, glm::radians(cameraAngleY), glm::vec3(0.f, 1.f, 0.f));
+		}
 		pv = p * v;
 		skybox_shader->use();
 		skybox_shader->setMatrix4F("pv", pv);
@@ -387,7 +409,7 @@ int main()
 
 		// 2. –азмываем €ркие фрагменты с помощью двухпроходного размыти€ по √ауссу
 		bool horizontal = true, first_iteration = true;
-		unsigned int amount = 20;
+		unsigned int amount = 40;
 		shaderBlur->use();
 		for (unsigned int i = 0; i < amount; i++)
 		{
@@ -468,7 +490,10 @@ void processInput(GLFWwindow* win, double dt)
 
 	camera.Move(dir, dt);
 
-
+	if (glfwGetKey(win, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		meteorTrans.position = glm::vec3(-0.5f, 0.f, -0.5f);
+	}
 }
 
 void OnScroll(GLFWwindow* win, double x, double y)
@@ -501,7 +526,7 @@ void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods)
 			mode = !mode;
 			glfwGetCursorPos(win, &mouseXtmp, &mouseYtmp);
 			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-			glfwSetCursorPos(win, RESOLUTION.HEIGHT / 2, RESOLUTION.WIDTH / 2);
+			glfwSetCursorPos(win, SCR_HEIGHT / 2, SCR_WIDTH / 2);
 			mouseLeftPress = true;
 		}
 		else if (action == GLFW_RELEASE)
@@ -509,8 +534,8 @@ void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods)
 			mode = !mode;
 			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			glfwSetCursorPos(win, mouseXtmp, mouseYtmp);
-			mouseX = RESOLUTION.HEIGHT / 2;
-			mouseY = RESOLUTION.WIDTH / 2;
+			mouseX = SCR_HEIGHT / 2;
+			mouseY = SCR_WIDTH / 2;
 			mouseLeftPress = false;
 		}
 	}
@@ -521,15 +546,15 @@ void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods)
 		{
 			glfwGetCursorPos(win, &mouseXtmp, &mouseYtmp);
 			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-			glfwSetCursorPos(win, RESOLUTION.HEIGHT / 2, RESOLUTION.WIDTH / 2);
+			glfwSetCursorPos(win, SCR_HEIGHT / 2, SCR_WIDTH / 2);
 			mouseRightPress = true;
 		}
 		else if (action == GLFW_RELEASE)
 		{
 			glfwSetInputMode(win, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			glfwSetCursorPos(win, mouseXtmp, mouseYtmp);
-			mouseX = RESOLUTION.HEIGHT / 2;
-			mouseY = RESOLUTION.WIDTH / 2;
+			mouseX = SCR_HEIGHT / 2;
+			mouseY = SCR_WIDTH / 2;
 			mouseRightPress = false;
 		}
 	}

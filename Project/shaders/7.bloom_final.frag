@@ -9,7 +9,7 @@ uniform sampler2D bloomBlur;
 
 void main()
 {             
-    const float gamma = 2.2;
+    const float gamma = 1.8;
     vec3 hdrColor = texture(scene, TexCoords).rgb;      
     vec3 bloomColor = texture(bloomBlur, TexCoords).rgb;
     hdrColor += bloomColor; // аддитивное смешение

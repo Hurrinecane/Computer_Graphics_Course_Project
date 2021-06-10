@@ -180,7 +180,7 @@ int main()
 	sunLight = new Light("Sun", true);
 	sunLight->initLikePointLight(
 		glm::vec3(-0.9f, 0.445f, -0.44f),	//position
-		glm::vec3(0.001f, 0.001f, 0.001f),			//ambient
+		glm::vec3(0.001f, 0.001f, 0.001f),	//ambient
 		glm::vec3(1.f, 1.f, .8f),			//diffuse
 		glm::vec3(0.0f, 0.0f, 0.0f),		//specular
 		1.0f, 0.f, 0.0f);
@@ -280,10 +280,6 @@ int main()
 	shaderBloomFinal->setInt("scene", 0);
 	shaderBloomFinal->setInt("bloomBlur", 1);
 #pragma endregion
-
-
-
-
 
 	double oldTime = glfwGetTime(), newTime, deltaTime;
 
@@ -393,10 +389,9 @@ int main()
 		lightTrans.position = sunLight->position;
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightTrans.position);
-		model = glm::rotate(model, glm::radians(lightTrans.rotation.z >= 360 ? lightTrans.rotation.z -= 360.f + 20.f : lightTrans.rotation.z += 20.f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(lightTrans.rotation.y >= 360 ? lightTrans.rotation.y -= 360.f - 20.f : lightTrans.rotation.y += 20.f), glm::vec3(0.f, 1.f, 0.f));
 
 		model = glm::scale(model, lightTrans.scale);
-		//model = glm::scale(model, glm::vec3(5.f, 5.f, 5.f));
 		light_shader->setMatrix4F("model", model);
 		light_shader->setVec3("lightColor", glm::vec3(1.f, 1.f, 1.f));
 		renderCube();
@@ -430,8 +425,6 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, colorBuffers[0]);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
-		shaderBloomFinal->setInt("bloom", true);
-		shaderBloomFinal->setFloat("exposure", 10.f);
 		renderQuad();
 
 		glfwSwapBuffers(win);

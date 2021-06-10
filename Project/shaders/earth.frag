@@ -116,7 +116,7 @@ void main()
     //if(brightness < 1.0)
     //    brightColor = vec4(0.0, 0.0, 0.0, 1.0);
     //else
-        brightColor += vec4(lresult, 1.0f);
+        //brightColor += vec4(66.f,170.f,255.f, 1.0f);
     //    brightColor = vec4(0.0, 0.0, 0.0, 1.0);
     outColor += vec4(lresult, 1.0f);
 

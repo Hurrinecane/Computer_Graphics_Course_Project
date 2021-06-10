@@ -63,11 +63,12 @@ void main()
     vec3 lresult;
     for (int i = 0; i<lights_count; i++)
     {
+        vec3 ambient = light[i].ambient * material.ambient;    // ‘онова€ составл€юща€
+
         if (light[i].type == 1) // Directional Light
         {
             vec3 lightDir = -light[i].direction;
 
-            vec3 ambient = light[i].ambient * material.ambient;
             vec3 diffspec = CalcDiffusePlusSpecular(i, lightDir);
 
             lresult = ambient + diffspec;
@@ -78,7 +79,6 @@ void main()
             if (light[i].type == 2) // Point Light
             {
                 float attenuation = getAtten(i);
-                vec3 ambient = light[i].ambient * material.ambient;
                 vec3 diffspec = CalcDiffusePlusSpecular(i, lightDir);
 
                 lresult = (ambient + diffspec) * attenuation;
@@ -96,7 +96,6 @@ void main()
                     }
 
                     float attenuation = getAtten(i);
-                    vec3 ambient = light[i].ambient * material.ambient;
                     vec3 diffspec = CalcDiffusePlusSpecular(i, lightDir) * koef;
 
                     lresult = (ambient + diffspec) * attenuation;

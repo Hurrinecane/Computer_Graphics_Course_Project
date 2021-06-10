@@ -179,9 +179,9 @@ int main()
 
 	sunLight = new Light("Sun", true);
 	sunLight->initLikePointLight(
-		glm::vec3(-0.9f, -0.445f, -0.44f),	//position
-		glm::vec3(0.3f, 0.3f, 0.3f),		//ambient
-		glm::vec3(1.f, 1.f, .8f),			//diffuse
+		glm::vec3(-0.9f, 0.445f, -0.44f),	//position
+		glm::vec3(0.f, 0.f, 0.f),			//ambient
+		glm::vec3(0.6f, 0.6f, .4f),			//diffuse
 		glm::vec3(0.0f, 0.0f, 0.0f),		//specular
 		1.0f, 0.f, 0.0f);
 	lights.push_back(sunLight);
@@ -190,19 +190,20 @@ int main()
 	flashLight->initLikeSpotLight(
 		glm::vec3(0.0f, 0.0f, 0.0f),	//position
 		glm::vec3(0.0f, 0.0f, 0.0f),	//direction
-		glm::radians(10.f),
-		glm::vec3(0.2f, 0.2f, 0.2f),	//ambient
-		glm::vec3(0.7f, 0.7f, 0.6f),	//diffuse
+		glm::radians(5.f),
+		glm::vec3(0.f, 0.f, 0.f),		//ambient
+		glm::vec3(0.3f, 0.3f, 0.1f),	//diffuse
 		glm::vec3(0.8f, 0.8f, 0.6f),	//specular
 		1.0f, 0.1f, 0.09f);
 	//lights.push_back(flashLight);
-
 
 	ModelTransform lightTrans = {
 	glm::vec3(0.f, 0.f, 0.f),			// position
 	glm::vec3(0.f, 0.f, 0.f),			// rotation
 	glm::vec3(0.05f, 0.05f, 0.05f) };	// scale
 #pragma endregion
+
+#pragma region OBJECTS INITIALIZATION
 
 #pragma region CUBES
 	int cubeMat = 2;
@@ -231,7 +232,7 @@ int main()
 	glm::vec3(0.f, 0.f, 0.f),				// position
 	glm::vec3(0.f, 0.f, 0.f),				// rowatation
 	glm::vec3(0.001f, 0.001f, 0.001f) };	// scale
-	
+
 	unsigned int box_texture = loadTexture("res\\images\\box.png", true);
 #pragma endregion
 
@@ -254,25 +255,28 @@ int main()
 		"res\\skyboxes\\space\\back.jpg"
 	};
 	unsigned int cubemapTexture = loadCubemap(skyboxTexFaces);
+#pragma endregion
 
+#pragma region SHADERS INITIALIZATION
+	Shader* polygon_shader = new Shader("shaders/basic.vert", "shaders/basic.frag");
+	Shader* light_shader = new Shader("shaders/light.vert", "shaders/light.frag");
+	Shader* earth_shader = new Shader("shaders/earth.vert", "shaders/earth.frag");
+	Shader* skybox_shader = new Shader("shaders/skybox.vert", "shaders/skybox.frag");
 	Shader* shaderBlur = new Shader("shaders/7.blur.vert", "shaders/7.blur.frag");
 	Shader* shaderBloomFinal = new Shader("shaders/7.bloom_final.vert", "shaders/7.bloom_final.frag");
-
-	Shader* polygon_shader = new Shader("shaders\\basic.vert", "shaders\\basic.frag");
-	Shader* light_shader = new Shader("shaders\\light.vert", "shaders\\light.frag");
-	Shader* earth_shader = new Shader("shaders\\earth.vert", "shaders\\earth.frag");
-	Shader* skybox_shader = new Shader("shaders\\skybox.vert", "shaders\\skybox.frag");
 
 	shaderBlur->use();
 	shaderBlur->setInt("image", 0);
 	shaderBloomFinal->use();
 	shaderBloomFinal->setInt("scene", 0);
 	shaderBloomFinal->setInt("bloomBlur", 1);
+#pragma endregion
+
+
+
+
 
 	double oldTime = glfwGetTime(), newTime, deltaTime;
-
-
-
 
 	while (!glfwWindowShouldClose(win))
 	{
@@ -367,14 +371,14 @@ int main()
 		lightTrans.position = sunLight->position;
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightTrans.position);
-		//model = glm::rotate(model, glm::radians(lightTrans.rotation.z == 360 ? lightTrans.rotation.z -= 360 : lightTrans.rotation.z += 10.f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(lightTrans.rotation.z >= 360 ? lightTrans.rotation.z -= 360.f + 20.f : lightTrans.rotation.z += 20.f), glm::vec3(0.f, 1.f, 0.f));
 
 		model = glm::scale(model, lightTrans.scale);
 		//model = glm::scale(model, glm::vec3(5.f, 5.f, 5.f));
 		light_shader->setMatrix4F("model", model);
 		light_shader->setVec3("lightColor", glm::vec3(1.f, 1.f, 1.f));
 		renderCube();
-		
+
 		glCullFace(GL_BACK);
 		glDepthFunc(GL_LESS); // set depth function back to default
 #pragma endregion
@@ -383,7 +387,7 @@ int main()
 
 		// 2. Размываем яркие фрагменты с помощью двухпроходного размытия по Гауссу
 		bool horizontal = true, first_iteration = true;
-		unsigned int amount = 10;
+		unsigned int amount = 20;
 		shaderBlur->use();
 		for (unsigned int i = 0; i < amount; i++)
 		{
@@ -405,7 +409,7 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
 		shaderBloomFinal->setInt("bloom", true);
-		shaderBloomFinal->setFloat("exposure", 1.f);
+		shaderBloomFinal->setFloat("exposure", 10.f);
 		renderQuad();
 
 		glfwSwapBuffers(win);
@@ -413,6 +417,7 @@ int main()
 	}
 
 	delete polygon_shader;
+	delete earth_shader;
 
 	glfwTerminate();
 	return 0;
@@ -598,7 +603,6 @@ unsigned int loadCubemap(vector<std::string> faces)
 	return textureID;
 }
 
-// Вспомогательная функция загрузки 2D-текстур из файла
 unsigned int loadTexture(char const* path, bool gammaCorrection)
 {
 	unsigned int textureID;
@@ -645,7 +649,6 @@ unsigned int loadTexture(char const* path, bool gammaCorrection)
 	return textureID;
 }
 
-// renderCube() рендерит 1x1 3D-ящик в NDC
 void renderCube()
 {
 	static unsigned int cubeVAO = 0;
@@ -727,7 +730,6 @@ void renderCube()
 	glBindVertexArray(0);
 }
 
-// renderQuad() рендерит 1x1 XY-прямоугольник в NDC
 void renderQuad()
 {
 	static unsigned int quadVAO = 0;

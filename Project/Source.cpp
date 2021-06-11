@@ -181,7 +181,7 @@ int main()
 	sunLight->initLikePointLight(
 		glm::vec3(-100.f, 49.0f, -49.f),	//position
 		glm::vec3(0.001f, 0.001f, 0.001f),	//ambient
-		glm::vec3(1.f, 1.f, .8f),			//diffuse
+		glm::vec3(0.9f, 0.9f, .8f),			//diffuse
 		glm::vec3(0.0f, 0.0f, 0.0f),		//specular
 		1.0f, 0.f, 0.0f);
 	lights.push_back(sunLight);
@@ -198,9 +198,9 @@ int main()
 	//lights.push_back(flashLight);
 
 	ModelTransform lightTrans = {
-	glm::vec3(0.f, 0.f, 0.f),		// position
-	glm::vec3(0.f, 0.f, 0.f),		// rotation
-	glm::vec3(6.f, 6.f, 6.f) };		// scale
+	glm::vec3(0.f, 0.f, 0.f),			// position
+	glm::vec3(0.f, 0.f, 0.f),			// rotation
+	glm::vec3(5.5f, 5.5f, 5.5f) };		// scale
 #pragma endregion
 
 #pragma region OBJECTS INITIALIZATION
@@ -317,6 +317,38 @@ int main()
 		flashLight->position = camera.Position - camera.Up * 0.01f;
 		flashLight->direction = camera.Front;
 
+		/*model = glm::mat4(1.0f);
+		direction = (meteorTrans.position - earthTrans.position);
+		model = glm::translate(model, meteorTrans.position -= direction * (float)deltaTime * 0.5f);
+		model = glm::rotate(model, glm::radians(meteorTrans.rotation.x >= 360 ? meteorTrans.rotation.x -= 360 - 0.1f : meteorTrans.rotation.x += 0.05f), glm::vec3(1.f, 0.f, 0.f));
+		model = glm::rotate(model, glm::radians(meteorTrans.rotation.y >= 360 ? meteorTrans.rotation.y -= 360 - 0.1f : meteorTrans.rotation.y += 0.01f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(meteorTrans.rotation.z >= 360 ? meteorTrans.rotation.z -= 360 - 0.1f : meteorTrans.rotation.z += 0.1f), glm::vec3(0.f, 0.f, 1.f));
+		model = glm::scale(model, meteorTrans.scale);
+		
+		earth_shader->setMatrix4F("model", model);
+		meteor.Draw(earth_shader);
+		*/
+
+		// DRAWING MOON
+		model = glm::mat4(1.0f);
+		moonTrans.position.x = 1.f * cosf(float(newTime));
+		moonTrans.position.z = 1.f * sinf(float(newTime));
+		model = glm::translate(model, moonTrans.position);
+		model = glm::rotate(model, glm::radians(moonTrans.rotation.y >= 360 ? moonTrans.rotation.y -= 360 - 0.1f : moonTrans.rotation.y += 0.1f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::scale(model, moonTrans.scale);
+
+		moon_shader->use();
+		moon_shader->setMatrix4F("pv", pv);
+		moon_shader->setMatrix4F("model", model);
+		moon_shader->setVec3("viewPos", camera.Position);
+
+		active_lights = 0;
+		for (int i = 0; i < lights.size(); i++)
+			active_lights += lights[i]->putInShader(moon_shader, active_lights);
+		moon_shader->setInt("lights_count", active_lights);
+
+		moon.Draw(moon_shader);
+
 // DRAWING EARTH
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, earthTrans.position);
@@ -334,61 +366,30 @@ int main()
 
 		earth_shader->setInt("lights_count", active_lights);
 		earth.Draw(earth_shader);
-
-// DRAWING MOON
-		model = glm::mat4(1.0f);
-		moonTrans.position.x = 1.f * cosf(float(newTime));
-		moonTrans.position.z = 1.f * sinf(float(newTime));
-		model = glm::translate(model, moonTrans.position);
-		model = glm::rotate(model, glm::radians(moonTrans.rotation.y >= 360 ? moonTrans.rotation.y -= 360 - 0.1f : moonTrans.rotation.y += 0.1f), glm::vec3(0.f, 1.f, 0.f));
-		model = glm::scale(model, moonTrans.scale);
+		/*
+		// DRAWING BOX
+		polygon_shader->use();
+		polygon_shader->setMatrix4F("pv", pv);
+		polygon_shader->setVec3("viewPos", camera.Position);
 		
-		moon_shader->use();
-		moon_shader->setMatrix4F("pv", pv);
-		moon_shader->setMatrix4F("model", model);
-		moon_shader->setVec3("viewPos", camera.Position);
-
 		active_lights = 0;
 		for (int i = 0; i < lights.size(); i++)
-			active_lights += lights[i]->putInShader(moon_shader, active_lights);
-		moon_shader->setInt("lights_count", active_lights);
-
-		moon.Draw(moon_shader);
-
-		//model = glm::mat4(1.0f);
-		//direction = (meteorTrans.position - earthTrans.position);
-		//model = glm::translate(model, meteorTrans.position -= direction * (float)deltaTime * 0.5f);
-		//model = glm::rotate(model, glm::radians(meteorTrans.rotation.x >= 360 ? meteorTrans.rotation.x -= 360 - 0.1f : meteorTrans.rotation.x += 0.05f), glm::vec3(1.f, 0.f, 0.f));
-		//model = glm::rotate(model, glm::radians(meteorTrans.rotation.y >= 360 ? meteorTrans.rotation.y -= 360 - 0.1f : meteorTrans.rotation.y += 0.01f), glm::vec3(0.f, 1.f, 0.f));
-		//model = glm::rotate(model, glm::radians(meteorTrans.rotation.z >= 360 ? meteorTrans.rotation.z -= 360 - 0.1f : meteorTrans.rotation.z += 0.1f), glm::vec3(0.f, 0.f, 1.f));
-		//model = glm::scale(model, meteorTrans.scale);
-		//
-		//earth_shader->setMatrix4F("model", model);
-		//meteor.Draw(earth_shader);
-
-		// DRAWING BOX
-		//polygon_shader->use();
-		//polygon_shader->setMatrix4F("pv", pv);
-		//polygon_shader->setVec3("viewPos", camera.Position);
-		//
-		//active_lights = 0;
-		//for (int i = 0; i < lights.size(); i++)
-		//	active_lights += lights[i]->putInShader(polygon_shader, active_lights);
-		//polygon_shader->setInt("lights_count", active_lights);
-		//
-		//model = glm::scale(model, glm::vec3(3.f, 3.f, 3.f));
-		//
-		//polygon_shader->setMatrix4F("model", model);
-		//
-		//polygon_shader->setVec3("material.ambient", cubeMaterials[cubeMat].ambient);
-		//polygon_shader->setVec3("material.diffuse", cubeMaterials[cubeMat].diffuse);
-		//polygon_shader->setVec3("material.specular", cubeMaterials[cubeMat].specular);
-		//polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat].shininess);
-		//
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, box_texture);
-		//renderCube();
-
+			active_lights += lights[i]->putInShader(polygon_shader, active_lights);
+		polygon_shader->setInt("lights_count", active_lights);
+		
+		model = glm::scale(model, glm::vec3(3.f, 3.f, 3.f));
+		
+		polygon_shader->setMatrix4F("model", model);
+		
+		polygon_shader->setVec3("material.ambient", cubeMaterials[cubeMat].ambient);
+		polygon_shader->setVec3("material.diffuse", cubeMaterials[cubeMat].diffuse);
+		polygon_shader->setVec3("material.specular", cubeMaterials[cubeMat].specular);
+		polygon_shader->setFloat("material.shininess", cubeMaterials[cubeMat].shininess);
+		
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, box_texture);
+		renderCube();
+		*/
 #pragma region background
 // DRAWING SKYBOX as last
 		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
@@ -417,7 +418,7 @@ int main()
 		lightTrans.position = sunLight->position;
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, lightTrans.position);
-		//model = glm::rotate(model, glm::radians(lightTrans.rotation.y >= 360 ? lightTrans.rotation.y -= 360.f - 20.f : lightTrans.rotation.y += 20.f), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(lightTrans.rotation.y >= 360 ? lightTrans.rotation.y -= 360.f - 10.f : lightTrans.rotation.y += 10.f), glm::vec3(0.f, 1.f, 0.f));
 
 		model = glm::scale(model, lightTrans.scale);
 		light_shader->setMatrix4F("model", model);

@@ -15,7 +15,7 @@ void main()
 {
 	vec4 vertPos = model * vec4(inPos, 1.0);
 	gl_Position = pv * vertPos;
-	texCoords = inTexCoords;
 	vertNormal = mat3(model)*inNormal;
+	texCoords = inTexCoords;
 	FragPos = vertPos.xyz;
 }

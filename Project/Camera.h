@@ -24,7 +24,7 @@ const float SENSITIVITY = 0.05f;
 
 const float FOV = 70.0f;
 const float ZNEAR = 0.01f;
-const float ZFAR = 1000.f;
+const float ZFAR = 250.f;
 const float ASPECTRATIO = 16.f/9.f;
 
 

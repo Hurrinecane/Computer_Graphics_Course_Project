@@ -6,18 +6,21 @@ unsigned int Shader::ID()
 	return programID;
 }
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath)
+Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath)
 {
 	const char* vShaderCode;
 	const char* fShaderCode;
+	std::string geometryCode;
 
 	std::string vTempString;
 	std::string fTempString;
+	std::ifstream gShaderFile;
 
 	std::ifstream vShaderFile;
 	std::ifstream fShaderFile;
 	vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 	fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+	gShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
 	try
 	{
@@ -34,6 +37,15 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 		fShaderFile.close();
 		fTempString = fShaderStream.str();
 		fShaderCode = fTempString.c_str();
+		// Если дан путь к геометрическому шейдеру, то загружаем и его
+		if (geometryPath != nullptr)
+		{
+			gShaderFile.open(geometryPath);
+			std::stringstream gShaderStream;
+			gShaderStream << gShaderFile.rdbuf();
+			gShaderFile.close();
+			geometryCode = gShaderStream.str();
+		}
 	}
 	catch (std::ifstream::failure& e)
 	{
@@ -52,14 +64,27 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 	glCompileShader(fragment);
 	checkCompileErrors(fragment, "FRAGMENT");
 
+	unsigned int geometry;
+	if (geometryPath != nullptr)
+	{
+		const char* gShaderCode = geometryCode.c_str();
+		geometry = glCreateShader(GL_GEOMETRY_SHADER);
+		glShaderSource(geometry, 1, &gShaderCode, NULL);
+		glCompileShader(geometry);
+		checkCompileErrors(geometry, "GEOMETRY");
+	}
 	programID = glCreateProgram();
 	glAttachShader(programID, vertex);
 	glAttachShader(programID, fragment);
+	if (geometryPath != nullptr)
+		glAttachShader(programID, geometry);
 	glLinkProgram(programID);
 	checkCompileErrors(programID, "PROGRAM");
 
 	glDeleteShader(vertex);
 	glDeleteShader(fragment);
+	if (geometryPath != nullptr)
+		glDeleteShader(geometry);
 }
 
 Shader::~Shader()

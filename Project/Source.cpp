@@ -48,16 +48,13 @@ Camera camera(glm::vec3(-1.4f, 0.4f, 0.8f), glm::vec3(0.f, 1.0f, 0.f), -30, 0);
 
 Light* flashLight, * sunLight;
 bool wireframeMode = false, boxMode = false, cameraRotationMode = false;
-float cameraAngleX, cameraAngleY;
-
-double mouseX = SCR_WIDTH / 2, mouseY = SCR_HEIGHT / 2, mouseXtmp = 0, mouseYtmp = 0;
 bool mouseLeftPress, mouseRightPress, mouseMiddlePress;
-
-bool meteorAlarm = false, meteorCollide = false;
+bool meteorAlarm = false, meteorCollide = false, ISScolapse = false;
+float cameraAngleX, cameraAngleY;
+double mouseX = SCR_WIDTH / 2, mouseY = SCR_HEIGHT / 2, mouseXtmp = 0, mouseYtmp = 0;
 
 void UpdatePolygoneMode();
 unsigned int loadCubemap(vector<std::string> faces);
-
 void processInput(GLFWwindow* win, double dt);
 void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods);
 void OnMouseKeyAction(GLFWwindow* win, int button, int action, int mods);
@@ -173,7 +170,7 @@ int main()
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			std::cout << "Framebuffer not complete!" << std::endl;
 	}
-	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
 	unsigned int depthMapFBO;
 	glGenFramebuffers(1, &depthMapFBO);
 
@@ -307,12 +304,12 @@ int main()
 #pragma region SHADERS INITIALIZATION
 	Shader* basic_shader = new Shader("shaders/basic.vert", "shaders/basic.frag");
 	Shader* light_shader = new Shader("shaders/light.vert", "shaders/light.frag");
-	Shader* earth_shader = new Shader("shaders/model.vert", "shaders/model_earth.frag");
-	Shader* moon_shader = new Shader("shaders/model.vert", "shaders/model_moon.frag");
+	Shader* model_shader = new Shader("shaders/model.vert", "shaders/model.frag");
+	Shader* model_exp_shader = new Shader("shaders/model.vert", "shaders/model_exp.frag", "shaders/explode.geom");
 	Shader* skybox_shader = new Shader("shaders/skybox.vert", "shaders/skybox.frag");
 	Shader* shaderBlur = new Shader("shaders/blur.vert", "shaders/blur.frag");
 	Shader* shaderBloomFinal = new Shader("shaders/bloom_final.vert", "shaders/bloom_final.frag");
-	Shader* simpleDepthShader = new Shader("shaders/point_shadows_depth.vert", "shaders/point_shadows_depth.frag", "shaders/point_shadows_depth.gs");
+	Shader* simpleDepthShader = new Shader("shaders/point_shadows_depth.vert", "shaders/point_shadows_depth.frag", "shaders/point_shadows_depth.geom");
 
 	basic_shader->use();
 	basic_shader->setInt("ourTexture", 0);
@@ -324,8 +321,8 @@ int main()
 	shaderBloomFinal->setInt("bloomBlur", 1);
 #pragma endregion
 
-	double oldTime = glfwGetTime(), newTime, deltaTime;
 
+	double oldTime = glfwGetTime(), newTime, deltaTime;
 	while (!glfwWindowShouldClose(win))
 	{
 #pragma region LOGIC
@@ -349,20 +346,38 @@ int main()
 
 		if (meteorAlarm)
 		{
+			static glm::vec3 tmpPosition;
 			if (!meteorCollide)
 			{
-				direction = (meteorTrans.position - moonTrans.position);
-				meteorTrans.position -= direction * (float)deltaTime * 0.5f;
+				if (glm::length(meteorTrans.position - ISSTrans.position) < 0.05f + 0.1f)
+				{
+					ISScolapse = true;
+					direction = (meteorTrans.position - earthTrans.position);
+					meteorTrans.position -= direction * (float)deltaTime * 0.1f;
+				}
+				else
+				{
+
+					direction = (meteorTrans.position - ISSTrans.position);
+					meteorTrans.position -= direction * (float)deltaTime * 0.5f;
+				}
 				meteorTrans.rotation.x >= 360 ? meteorTrans.rotation.x -= 360 - 0.1f : meteorTrans.rotation.x += 0.05f;
 				meteorTrans.rotation.y >= 360 ? meteorTrans.rotation.y -= 360 - 0.1f : meteorTrans.rotation.y += 0.01f;
 				meteorTrans.rotation.z >= 360 ? meteorTrans.rotation.z -= 360 - 0.1f : meteorTrans.rotation.z += 0.10f;
 			}
-
-			if (glm::length(meteorTrans.position - earthTrans.position) < 0.05f + 0.45f || glm::length(meteorTrans.position - moonTrans.position) < 0.22f + 0.05f)
+			else
+			{
+				meteorTrans.position.x = 0.42f * sinf(earthTrans.rotation.y / 180 * glm::pi<float>());
+				meteorTrans.position.z = 0.42f * cosf(earthTrans.rotation.y / 180 * glm::pi<float>());
+				cout << meteorTrans.position.x << " " << meteorTrans.position.z << endl;
+			}
+			if ((glm::length(meteorTrans.position - earthTrans.position) < 0.05f + 0.42f || glm::length(meteorTrans.position - moonTrans.position) < 0.22f + 0.05f) && !meteorCollide)
 			{
 				cout << glm::length(meteorTrans.position - earthTrans.position) << " " << glm::length(meteorTrans.position - moonTrans.position) << endl;
+				tmpPosition = meteorTrans.position;
 				meteorCollide = true;
 			}
+
 		}
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -371,7 +386,7 @@ int main()
 
 #pragma region DEPTH MAP RENDERING
 		float near_plane = 1.0f;
-		float far_plane = 150.0f;
+		float far_plane = 50.0f;
 		glm::mat4 shadowProj = glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, near_plane, far_plane);
 		std::vector<glm::mat4> shadowTransforms;
 		for (int i = 0; i < lights.size(); i++)
@@ -431,13 +446,17 @@ int main()
 		model = glm::rotate(model, glm::radians(earthTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
 		model = glm::scale(model, earthTrans.scale);
 
-
-		simpleDepthShader->setMatrix4F("model", model);
-		earth.Draw(simpleDepthShader);
-
-		//model = glm::scale(model, glm::vec3(3.f, 3.f, 3.f));
-		//simpleDepthShader->setMatrix4F("model", model);
-		//renderCube();
+		if (!boxMode)
+		{
+			model = glm::scale(model, glm::vec3(3.f, 3.f, 3.f));
+			simpleDepthShader->setMatrix4F("model", model);
+			earth.Draw(simpleDepthShader);
+		}
+		else {
+			model = glm::scale(model, glm::vec3(3.f, 3.f, 3.f));
+			simpleDepthShader->setMatrix4F("model", model);
+			renderCube();
+		}
 		if (meteorAlarm)
 		{
 			// DRAWING METEOR
@@ -478,22 +497,32 @@ int main()
 		model = glm::rotate(model, glm::radians(ISSTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
 		model = glm::scale(model, ISSTrans.scale);
 
-		moon_shader->use();
-		moon_shader->setMatrix4F("pv", pv);
-		moon_shader->setMatrix4F("model", model);
-		moon_shader->setVec3("viewPos", camera.Position);
+		model_exp_shader->use();
+		model_exp_shader->setMatrix4F("pv", pv);
+		model_exp_shader->setMatrix4F("model", model);
+		model_exp_shader->setVec3("viewPos", camera.Position);
 
 		active_lights = 0;
 		for (int i = 0; i < lights.size(); i++)
-			active_lights += lights[i]->putInShader(moon_shader, active_lights);
-		moon_shader->setInt("lights_count", active_lights);
+			active_lights += lights[i]->putInShader(model_exp_shader, active_lights);
+		model_exp_shader->setInt("lights_count", active_lights);
 
-		moon_shader->setFloat("far_plane", far_plane);
-		moon_shader->setBool("shadows", false);
+		model_exp_shader->setFloat("far_plane", far_plane);
+		model_exp_shader->setBool("shadows", true);
+		model_exp_shader->setBool("blur", false);
+		model_exp_shader->setBool("collapse", ISScolapse);
+		static float blow = 0;
+		if (ISScolapse)
+		{
+			if (blow < glm::pi<float>() / 2)
+				blow += 0.001f;
+			model_exp_shader->setFloat("blow", blow);
+		}
+		else
+			blow = 0;
 
 
-		ISS.Draw(moon_shader);
-
+		ISS.Draw(model_exp_shader);
 
 		// DRAWING MOON
 		model = glm::mat4(1.0f);
@@ -505,21 +534,22 @@ int main()
 
 		if (!boxMode)
 		{
-			moon_shader->use();
-			moon_shader->setMatrix4F("pv", pv);
-			moon_shader->setMatrix4F("model", model);
-			moon_shader->setVec3("viewPos", camera.Position);
+			model_shader->use();
+			model_shader->setMatrix4F("pv", pv);
+			model_shader->setMatrix4F("model", model);
+			model_shader->setVec3("viewPos", camera.Position);
 
 			active_lights = 0;
 			for (int i = 0; i < lights.size(); i++)
-				active_lights += lights[i]->putInShader(moon_shader, active_lights);
-			moon_shader->setInt("lights_count", active_lights);
+				active_lights += lights[i]->putInShader(model_shader, active_lights);
+			model_shader->setInt("lights_count", active_lights);
 
-			moon_shader->setFloat("far_plane", far_plane);
-			moon_shader->setBool("shadows", false);
+			model_shader->setFloat("far_plane", far_plane);
+			model_shader->setBool("shadows", true);
+			model_shader->setBool("blur", false);
 
 
-			moon.Draw(moon_shader);
+			moon.Draw(model_shader);
 		}
 		else
 		{
@@ -555,21 +585,35 @@ int main()
 		if (!boxMode)
 		{
 
-			earth_shader->use();
-			earth_shader->setMatrix4F("pv", pv);
-			earth_shader->setMatrix4F("model", model);
-			earth_shader->setVec3("viewPos", camera.Position);
+			model_shader->use();
+			model_shader->setMatrix4F("pv", pv);
+			model_shader->setMatrix4F("model", model);
+			model_shader->setVec3("viewPos", camera.Position);
 
 			active_lights = 0;
 			for (int i = 0; i < lights.size(); i++)
-				active_lights += lights[i]->putInShader(earth_shader, active_lights);
+				active_lights += lights[i]->putInShader(model_shader, active_lights);
 
-			earth_shader->setInt("lights_count", active_lights);
+			model_shader->setInt("lights_count", active_lights);
 
-			earth_shader->setFloat("far_plane", far_plane);
-			earth_shader->setBool("shadows", true);
+			model_shader->setFloat("far_plane", far_plane);
+			model_shader->setBool("shadows", true);
+			model_shader->setBool("blur", true);
 
-			earth.Draw(earth_shader);
+			earth.Draw(model_shader);
+
+			if (meteorAlarm)
+			{
+				model = glm::mat4(1.0f);
+				model = glm::translate(model, meteorTrans.position);
+				model = glm::rotate(model, glm::radians(meteorTrans.rotation.x), glm::vec3(1.f, 0.f, 0.f));
+				model = glm::rotate(model, glm::radians(meteorTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
+				model = glm::rotate(model, glm::radians(meteorTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
+				model = glm::scale(model, meteorTrans.scale);
+
+				model_shader->setMatrix4F("model", model);
+				meteor.Draw(model_shader);
+			}
 		}
 		else {
 			// DRAWING EARTH-BOX
@@ -594,20 +638,6 @@ int main()
 			glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
 			renderCube();
 		}
-
-		if (meteorAlarm)
-		{
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, meteorTrans.position);
-			model = glm::rotate(model, glm::radians(meteorTrans.rotation.x), glm::vec3(1.f, 0.f, 0.f));
-			model = glm::rotate(model, glm::radians(meteorTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
-			model = glm::rotate(model, glm::radians(meteorTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
-			model = glm::scale(model, meteorTrans.scale);
-
-			earth_shader->setMatrix4F("model", model);
-			meteor.Draw(earth_shader);
-		}
-
 
 #pragma region BACKGROUND
 		// DRAWING SKYBOX (as last)
@@ -654,6 +684,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #pragma endregion
 
+#pragma region FINAL RENDERING
 		// Размываем яркие фрагменты с помощью двухпроходного размытия по Гауссу
 		bool horizontal = true, first_iteration = true;
 		unsigned int amount = 40;
@@ -681,16 +712,20 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, pingpongColorbuffers[!horizontal]);
 		renderQuad();
+#pragma endregion
 
 		glfwSwapBuffers(win);
 		glfwPollEvents();
 	}
 
 	delete basic_shader;
-	delete earth_shader;
-
-	glfwTerminate();
-	return 0;
+	delete light_shader;
+	delete model_shader;
+	delete model_exp_shader;
+	delete skybox_shader;
+	delete shaderBlur;
+	delete shaderBloomFinal;
+	delete simpleDepthShader;
 }
 
 
@@ -759,6 +794,9 @@ void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods)
 		case GLFW_KEY_LEFT_ALT:
 			boxMode = !boxMode;
 			break;
+		case GLFW_KEY_C:
+			ISScolapse = !ISScolapse;
+			break;
 		case GLFW_KEY_SPACE:
 			do
 			{
@@ -767,6 +805,7 @@ void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods)
 				|| glm::length(meteorTrans.position - moonTrans.position) < 0.05f + 0.22f + .5f);
 			meteorAlarm = true;
 			meteorCollide = false;
+			ISScolapse = false;
 			break;
 		}
 	}

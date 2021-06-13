@@ -21,8 +21,8 @@ uniform bool collapse;
 
 vec4 explode(vec4 position, vec3 normal)
 {
-    float magnitude = 0.5;
-    vec3 direction = normalize(normal + blow) * ((sin(blow)) / 2.0) * magnitude;
+    float magnitude = 0.1;
+    vec3 direction = normalize(normal + blow) * sin(blow) * magnitude;
     return position + vec4(direction, 0.0);
 }
 
@@ -79,6 +79,6 @@ void main()
         gs_out.TBN =        gs_in[2].TBN;
         gs_out.fragPos =    gs_in[2].fragPos;
         EmitVertex();
-        //EndPrimitive();
+        EndPrimitive();
     }
 }

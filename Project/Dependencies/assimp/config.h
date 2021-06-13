@@ -616,7 +616,7 @@ enum aiComponent
     "IMPORT_FBX_READ_ANIMATIONS"
 
 // ---------------------------------------------------------------------------
-/** @brief Set whether the fbx importer will act in strict mode in which only
+/** @brief Set whether the fbx importer will act in strict cameraRotationMode in which only
  *    FBX 2013 is supported and any other sub formats are rejected. FBX 2013
  *    is the primary target for the importer, so this format is best
  *    supported and well-tested.

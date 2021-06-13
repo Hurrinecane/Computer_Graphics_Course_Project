@@ -546,13 +546,13 @@ extern "C" {
 /*! @brief If this bit is set the Caps Lock key is enabled.
  *
  *  If this bit is set the Caps Lock key is enabled and the @ref
- *  GLFW_LOCK_KEY_MODS input mode is set.
+ *  GLFW_LOCK_KEY_MODS input cameraRotationMode is set.
  */
 #define GLFW_MOD_CAPS_LOCK       0x0010
 /*! @brief If this bit is set the Num Lock key is enabled.
  *
  *  If this bit is set the Num Lock key is enabled and the @ref
- *  GLFW_LOCK_KEY_MODS input mode is set.
+ *  GLFW_LOCK_KEY_MODS input cameraRotationMode is set.
  */
 #define GLFW_MOD_NUM_LOCK        0x0020
 
@@ -974,9 +974,9 @@ extern "C" {
  *  and [attribute](@ref GLFW_OPENGL_FORWARD_COMPAT_attrib).
  */
 #define GLFW_OPENGL_FORWARD_COMPAT  0x00022006
-/*! @brief Debug mode context hint and attribute.
+/*! @brief Debug cameraRotationMode context hint and attribute.
  *
- *  Debug mode context [hint](@ref GLFW_OPENGL_DEBUG_CONTEXT_hint) and
+ *  Debug cameraRotationMode context [hint](@ref GLFW_OPENGL_DEBUG_CONTEXT_hint) and
  *  [attribute](@ref GLFW_OPENGL_DEBUG_CONTEXT_attrib).
  */
 #define GLFW_OPENGL_DEBUG_CONTEXT   0x00022007
@@ -1638,9 +1638,9 @@ typedef void (* GLFWmonitorfun)(GLFWmonitor*,int);
  */
 typedef void (* GLFWjoystickfun)(int,int);
 
-/*! @brief Video mode type.
+/*! @brief Video cameraRotationMode type.
  *
- *  This describes a single video mode.
+ *  This describes a single video cameraRotationMode.
  *
  *  @sa @ref monitor_modes
  *  @sa @ref glfwGetVideoMode
@@ -1653,22 +1653,22 @@ typedef void (* GLFWjoystickfun)(int,int);
  */
 typedef struct GLFWvidmode
 {
-    /*! The width, in screen coordinates, of the video mode.
+    /*! The width, in screen coordinates, of the video cameraRotationMode.
      */
     int width;
-    /*! The height, in screen coordinates, of the video mode.
+    /*! The height, in screen coordinates, of the video cameraRotationMode.
      */
     int height;
-    /*! The bit depth of the red channel of the video mode.
+    /*! The bit depth of the red channel of the video cameraRotationMode.
      */
     int redBits;
-    /*! The bit depth of the green channel of the video mode.
+    /*! The bit depth of the green channel of the video cameraRotationMode.
      */
     int greenBits;
-    /*! The bit depth of the blue channel of the video mode.
+    /*! The bit depth of the blue channel of the video cameraRotationMode.
      */
     int blueBits;
-    /*! The refresh rate, in Hz, of the video mode.
+    /*! The refresh rate, in Hz, of the video cameraRotationMode.
      */
     int refreshRate;
 } GLFWvidmode;
@@ -2308,14 +2308,14 @@ GLFWAPI GLFWmonitorfun glfwSetMonitorCallback(GLFWmonitorfun callback);
  */
 GLFWAPI const GLFWvidmode* glfwGetVideoModes(GLFWmonitor* monitor, int* count);
 
-/*! @brief Returns the current mode of the specified monitor.
+/*! @brief Returns the current cameraRotationMode of the specified monitor.
  *
- *  This function returns the current video mode of the specified monitor.  If
+ *  This function returns the current video cameraRotationMode of the specified monitor.  If
  *  you have created a full screen window for that monitor, the return value
  *  will depend on whether that window is iconified.
  *
  *  @param[in] monitor The monitor to query.
- *  @return The current mode of the monitor, or `NULL` if an
+ *  @return The current cameraRotationMode of the monitor, or `NULL` if an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
@@ -2551,20 +2551,20 @@ GLFWAPI void glfwWindowHintString(int hint, const char* value);
  *  glfwGetWindowAttrib, @ref glfwGetWindowSize and @ref glfwGetFramebufferSize.
  *
  *  To create a full screen window, you need to specify the monitor the window
- *  will cover.  If no monitor is specified, the window will be windowed mode.
+ *  will cover.  If no monitor is specified, the window will be windowed cameraRotationMode.
  *  Unless you have a way for the user to choose a specific monitor, it is
  *  recommended that you pick the primary monitor.  For more information on how
  *  to query connected monitors, see @ref monitor_monitors.
  *
  *  For full screen windows, the specified size becomes the resolution of the
  *  window's _desired video mode_.  As long as a full screen window is not
- *  iconified, the supported video mode most closely matching the desired video
- *  mode is set for the specified monitor.  For more information about full
+ *  iconified, the supported video cameraRotationMode most closely matching the desired video
+ *  cameraRotationMode is set for the specified monitor.  For more information about full
  *  screen windows, including the creation of so called _windowed full screen_
  *  or _borderless full screen_ windows, see @ref window_windowed_full_screen.
  *
  *  Once you have created the window, you can switch it between windowed and
- *  full screen mode with @ref glfwSetWindowMonitor.  This will not affect its
+ *  full screen cameraRotationMode with @ref glfwSetWindowMonitor.  This will not affect its
  *  OpenGL or OpenGL ES context.
  *
  *  By default, newly created windows use the placement recommended by the
@@ -2588,8 +2588,8 @@ GLFWAPI void glfwWindowHintString(int hint, const char* value);
  *  @param[in] height The desired height, in screen coordinates, of the window.
  *  This must be greater than zero.
  *  @param[in] title The initial, UTF-8 encoded window title.
- *  @param[in] monitor The monitor to use for full screen mode, or `NULL` for
- *  windowed mode.
+ *  @param[in] monitor The monitor to use for full screen cameraRotationMode, or `NULL` for
+ *  windowed cameraRotationMode.
  *  @param[in] share The window whose context to share resources with, or `NULL`
  *  to not share resources.
  *  @return The handle of the created window, or `NULL` if an
@@ -2669,7 +2669,7 @@ GLFWAPI void glfwWindowHintString(int hint, const char* value);
  *  instance a keybind mechanism.  If neither of these protocols is supported,
  *  the window won't be decorated.
  *
- *  @remark @wayland A full screen window will not attempt to change the mode,
+ *  @remark @wayland A full screen window will not attempt to change the cameraRotationMode,
  *  no matter what the requested size or refresh rate.
  *
  *  @remark @wayland Screensaver inhibition requires the idle-inhibit protocol
@@ -2864,7 +2864,7 @@ GLFWAPI void glfwGetWindowPos(GLFWwindow* window, int* xpos, int* ypos);
 /*! @brief Sets the position of the content area of the specified window.
  *
  *  This function sets the position, in screen coordinates, of the upper-left
- *  corner of the content area of the specified windowed mode window.  If the
+ *  corner of the content area of the specified windowed cameraRotationMode window.  If the
  *  window is a full screen window, this function does nothing.
  *
  *  __Do not use this function__ to move an already visible window unless you
@@ -2933,7 +2933,7 @@ GLFWAPI void glfwGetWindowSize(GLFWwindow* window, int* width, int* height);
  *  once it is made windowed.  If the window is not resizable, this function
  *  does nothing.
  *
- *  The size limits are applied immediately to a windowed mode window and may
+ *  The size limits are applied immediately to a windowed cameraRotationMode window and may
  *  cause it to be resized.
  *
  *  The maximum dimensions must be greater than or equal to the minimum
@@ -2983,7 +2983,7 @@ GLFWAPI void glfwSetWindowSizeLimits(GLFWwindow* window, int minwidth, int minhe
  *  If the numerator and denominator is set to `GLFW_DONT_CARE` then the aspect
  *  ratio limit is disabled.
  *
- *  The aspect ratio is applied immediately to a windowed mode window and may
+ *  The aspect ratio is applied immediately to a windowed cameraRotationMode window and may
  *  cause it to be resized.
  *
  *  @param[in] window The window to set limits for.
@@ -3018,11 +3018,11 @@ GLFWAPI void glfwSetWindowAspectRatio(GLFWwindow* window, int numer, int denom);
  *  the specified window.
  *
  *  For full screen windows, this function updates the resolution of its desired
- *  video mode and switches to the video mode closest to it, without affecting
+ *  video cameraRotationMode and switches to the video cameraRotationMode closest to it, without affecting
  *  the window's context.  As the context is unaffected, the bit depths of the
  *  framebuffer remain unchanged.
  *
- *  If you wish to update the refresh rate of the desired video mode in addition
+ *  If you wish to update the refresh rate of the desired video cameraRotationMode in addition
  *  to its resolution, see @ref glfwSetWindowMonitor.
  *
  *  The window manager may put limits on what sizes are allowed.  GLFW cannot
@@ -3037,7 +3037,7 @@ GLFWAPI void glfwSetWindowAspectRatio(GLFWwindow* window, int numer, int denom);
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
  *
- *  @remark @wayland A full screen window will not attempt to change the mode,
+ *  @remark @wayland A full screen window will not attempt to change the cameraRotationMode,
  *  no matter what the requested size.
  *
  *  @thread_safety This function must only be called from the main thread.
@@ -3294,10 +3294,10 @@ GLFWAPI void glfwMaximizeWindow(GLFWwindow* window);
 /*! @brief Makes the specified window visible.
  *
  *  This function makes the specified window visible if it was previously
- *  hidden.  If the window is already visible or is in full screen mode, this
+ *  hidden.  If the window is already visible or is in full screen cameraRotationMode, this
  *  function does nothing.
  *
- *  By default, windowed mode windows are focused when shown
+ *  By default, windowed cameraRotationMode windows are focused when shown
  *  Set the [GLFW_FOCUS_ON_SHOW](@ref GLFW_FOCUS_ON_SHOW_hint) window hint
  *  to change this behavior for all newly created windows, or change the
  *  behavior for an existing window with @ref glfwSetWindowAttrib.
@@ -3321,7 +3321,7 @@ GLFWAPI void glfwShowWindow(GLFWwindow* window);
 /*! @brief Hides the specified window.
  *
  *  This function hides the specified window if it was previously visible.  If
- *  the window is already hidden or is in full screen mode, this function does
+ *  the window is already hidden or is in full screen cameraRotationMode, this function does
  *  nothing.
  *
  *  @param[in] window The window to hide.
@@ -3345,11 +3345,11 @@ GLFWAPI void glfwHideWindow(GLFWwindow* window);
  *  This function brings the specified window to front and sets input focus.
  *  The window should already be visible and not iconified.
  *
- *  By default, both windowed and full screen mode windows are focused when
+ *  By default, both windowed and full screen cameraRotationMode windows are focused when
  *  initially created.  Set the [GLFW_FOCUSED](@ref GLFW_FOCUSED_hint) to
  *  disable this behavior.
  *
- *  Also by default, windowed mode windows are focused when shown
+ *  Also by default, windowed cameraRotationMode windows are focused when shown
  *  with @ref glfwShowWindow. Set the
  *  [GLFW_FOCUS_ON_SHOW](@ref GLFW_FOCUS_ON_SHOW_hint) to disable this behavior.
  *
@@ -3406,13 +3406,13 @@ GLFWAPI void glfwFocusWindow(GLFWwindow* window);
  */
 GLFWAPI void glfwRequestWindowAttention(GLFWwindow* window);
 
-/*! @brief Returns the monitor that the window uses for full screen mode.
+/*! @brief Returns the monitor that the window uses for full screen cameraRotationMode.
  *
  *  This function returns the handle of the monitor that the specified window is
  *  in full screen on.
  *
  *  @param[in] window The window to query.
- *  @return The monitor, or `NULL` if the window is in windowed mode or an
+ *  @return The monitor, or `NULL` if the window is in windowed cameraRotationMode or an
  *  [error](@ref error_handling) occurred.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
@@ -3428,13 +3428,13 @@ GLFWAPI void glfwRequestWindowAttention(GLFWwindow* window);
  */
 GLFWAPI GLFWmonitor* glfwGetWindowMonitor(GLFWwindow* window);
 
-/*! @brief Sets the mode, monitor, video mode and placement of a window.
+/*! @brief Sets the cameraRotationMode, monitor, video cameraRotationMode and placement of a window.
  *
- *  This function sets the monitor that the window uses for full screen mode or,
- *  if the monitor is `NULL`, makes it windowed mode.
+ *  This function sets the monitor that the window uses for full screen cameraRotationMode or,
+ *  if the monitor is `NULL`, makes it windowed cameraRotationMode.
  *
  *  When setting a monitor, this function updates the width, height and refresh
- *  rate of the desired video mode and switches to the video mode closest to it.
+ *  rate of the desired video cameraRotationMode and switches to the video cameraRotationMode closest to it.
  *  The window position is ignored when setting a monitor.
  *
  *  When the monitor is `NULL`, the position, width and height are used to
@@ -3442,37 +3442,37 @@ GLFWAPI GLFWmonitor* glfwGetWindowMonitor(GLFWwindow* window);
  *  is specified.
  *
  *  If you only wish to update the resolution of a full screen window or the
- *  size of a windowed mode window, see @ref glfwSetWindowSize.
+ *  size of a windowed cameraRotationMode window, see @ref glfwSetWindowSize.
  *
- *  When a window transitions from full screen to windowed mode, this function
+ *  When a window transitions from full screen to windowed cameraRotationMode, this function
  *  restores any previous window settings such as whether it is decorated,
  *  floating, resizable, has size or aspect ratio limits, etc.
  *
- *  @param[in] window The window whose monitor, size or video mode to set.
- *  @param[in] monitor The desired monitor, or `NULL` to set windowed mode.
+ *  @param[in] window The window whose monitor, size or video cameraRotationMode to set.
+ *  @param[in] monitor The desired monitor, or `NULL` to set windowed cameraRotationMode.
  *  @param[in] xpos The desired x-coordinate of the upper-left corner of the
  *  content area.
  *  @param[in] ypos The desired y-coordinate of the upper-left corner of the
  *  content area.
  *  @param[in] width The desired with, in screen coordinates, of the content
- *  area or video mode.
+ *  area or video cameraRotationMode.
  *  @param[in] height The desired height, in screen coordinates, of the content
- *  area or video mode.
- *  @param[in] refreshRate The desired refresh rate, in Hz, of the video mode,
+ *  area or video cameraRotationMode.
+ *  @param[in] refreshRate The desired refresh rate, in Hz, of the video cameraRotationMode,
  *  or `GLFW_DONT_CARE`.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
  *
  *  @remark The OpenGL or OpenGL ES context will not be destroyed or otherwise
- *  affected by any resizing or mode switching, although you may need to update
+ *  affected by any resizing or cameraRotationMode switching, although you may need to update
  *  your viewport if the framebuffer size has changed.
  *
  *  @remark @wayland The desired window position is ignored, as there is no way
  *  for an application to set this property.
  *
  *  @remark @wayland Setting the window to full screen will not attempt to
- *  change the mode, no matter what the requested size or refresh rate.
+ *  change the cameraRotationMode, no matter what the requested size or refresh rate.
  *
  *  @thread_safety This function must only be called from the main thread.
  *
@@ -3534,7 +3534,7 @@ GLFWAPI int glfwGetWindowAttrib(GLFWwindow* window, int attrib);
  *  Some of these attributes are ignored for full screen windows.  The new
  *  value will take effect if the window is later made windowed.
  *
- *  Some of these attributes are ignored for windowed mode windows.  The new
+ *  Some of these attributes are ignored for windowed cameraRotationMode windows.  The new
  *  value will take effect if the window is later made full screen.
  *
  *  @param[in] window The window to set the attribute for.
@@ -3545,7 +3545,7 @@ GLFWAPI int glfwGetWindowAttrib(GLFWwindow* window, int attrib);
  *  GLFW_INVALID_ENUM, @ref GLFW_INVALID_VALUE and @ref GLFW_PLATFORM_ERROR.
  *
  *  @remark Calling @ref glfwGetWindowAttrib will always return the latest
- *  value, even if that value is ignored by the current mode of the window.
+ *  value, even if that value is ignored by the current cameraRotationMode of the window.
  *
  *  @thread_safety This function must only be called from the main thread.
  *
@@ -4059,12 +4059,12 @@ GLFWAPI void glfwPostEmptyEvent(void);
 /*! @brief Returns the value of an input option for the specified window.
  *
  *  This function returns the value of an input option for the specified window.
- *  The mode must be one of @ref GLFW_CURSOR, @ref GLFW_STICKY_KEYS,
+ *  The cameraRotationMode must be one of @ref GLFW_CURSOR, @ref GLFW_STICKY_KEYS,
  *  @ref GLFW_STICKY_MOUSE_BUTTONS, @ref GLFW_LOCK_KEY_MODS or
  *  @ref GLFW_RAW_MOUSE_MOTION.
  *
  *  @param[in] window The window to query.
- *  @param[in] mode One of `GLFW_CURSOR`, `GLFW_STICKY_KEYS`,
+ *  @param[in] cameraRotationMode One of `GLFW_CURSOR`, `GLFW_STICKY_KEYS`,
  *  `GLFW_STICKY_MOUSE_BUTTONS`, `GLFW_LOCK_KEY_MODS` or
  *  `GLFW_RAW_MOUSE_MOTION`.
  *
@@ -4079,16 +4079,16 @@ GLFWAPI void glfwPostEmptyEvent(void);
  *
  *  @ingroup input
  */
-GLFWAPI int glfwGetInputMode(GLFWwindow* window, int mode);
+GLFWAPI int glfwGetInputMode(GLFWwindow* window, int cameraRotationMode);
 
 /*! @brief Sets an input option for the specified window.
  *
- *  This function sets an input mode option for the specified window.  The mode
+ *  This function sets an input cameraRotationMode option for the specified window.  The cameraRotationMode
  *  must be one of @ref GLFW_CURSOR, @ref GLFW_STICKY_KEYS,
  *  @ref GLFW_STICKY_MOUSE_BUTTONS, @ref GLFW_LOCK_KEY_MODS or
  *  @ref GLFW_RAW_MOUSE_MOTION.
  *
- *  If the mode is `GLFW_CURSOR`, the value must be one of the following cursor
+ *  If the cameraRotationMode is `GLFW_CURSOR`, the value must be one of the following cursor
  *  modes:
  *  - `GLFW_CURSOR_NORMAL` makes the cursor visible and behaving normally.
  *  - `GLFW_CURSOR_HIDDEN` makes the cursor invisible when it is over the
@@ -4097,14 +4097,14 @@ GLFWAPI int glfwGetInputMode(GLFWwindow* window, int mode);
  *    and unlimited cursor movement.  This is useful for implementing for
  *    example 3D camera controls.
  *
- *  If the mode is `GLFW_STICKY_KEYS`, the value must be either `GLFW_TRUE` to
+ *  If the cameraRotationMode is `GLFW_STICKY_KEYS`, the value must be either `GLFW_TRUE` to
  *  enable sticky keys, or `GLFW_FALSE` to disable it.  If sticky keys are
  *  enabled, a key press will ensure that @ref glfwGetKey returns `GLFW_PRESS`
  *  the next time it is called even if the key had been released before the
  *  call.  This is useful when you are only interested in whether keys have been
  *  pressed but not when or in which order.
  *
- *  If the mode is `GLFW_STICKY_MOUSE_BUTTONS`, the value must be either
+ *  If the cameraRotationMode is `GLFW_STICKY_MOUSE_BUTTONS`, the value must be either
  *  `GLFW_TRUE` to enable sticky mouse buttons, or `GLFW_FALSE` to disable it.
  *  If sticky mouse buttons are enabled, a mouse button press will ensure that
  *  @ref glfwGetMouseButton returns `GLFW_PRESS` the next time it is called even
@@ -4112,23 +4112,23 @@ GLFWAPI int glfwGetInputMode(GLFWwindow* window, int mode);
  *  you are only interested in whether mouse buttons have been pressed but not
  *  when or in which order.
  *
- *  If the mode is `GLFW_LOCK_KEY_MODS`, the value must be either `GLFW_TRUE` to
+ *  If the cameraRotationMode is `GLFW_LOCK_KEY_MODS`, the value must be either `GLFW_TRUE` to
  *  enable lock key modifier bits, or `GLFW_FALSE` to disable them.  If enabled,
  *  callbacks that receive modifier bits will also have the @ref
  *  GLFW_MOD_CAPS_LOCK bit set when the event was generated with Caps Lock on,
  *  and the @ref GLFW_MOD_NUM_LOCK bit when Num Lock was on.
  *
- *  If the mode is `GLFW_RAW_MOUSE_MOTION`, the value must be either `GLFW_TRUE`
+ *  If the cameraRotationMode is `GLFW_RAW_MOUSE_MOTION`, the value must be either `GLFW_TRUE`
  *  to enable raw (unscaled and unaccelerated) mouse motion when the cursor is
  *  disabled, or `GLFW_FALSE` to disable it.  If raw motion is not supported,
  *  attempting to set this will emit @ref GLFW_PLATFORM_ERROR.  Call @ref
  *  glfwRawMouseMotionSupported to check for support.
  *
- *  @param[in] window The window whose input mode to set.
- *  @param[in] mode One of `GLFW_CURSOR`, `GLFW_STICKY_KEYS`,
+ *  @param[in] window The window whose input cameraRotationMode to set.
+ *  @param[in] cameraRotationMode One of `GLFW_CURSOR`, `GLFW_STICKY_KEYS`,
  *  `GLFW_STICKY_MOUSE_BUTTONS`, `GLFW_LOCK_KEY_MODS` or
  *  `GLFW_RAW_MOUSE_MOTION`.
- *  @param[in] value The new value of the specified input mode.
+ *  @param[in] value The new value of the specified input cameraRotationMode.
  *
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED, @ref
  *  GLFW_INVALID_ENUM and @ref GLFW_PLATFORM_ERROR.
@@ -4141,7 +4141,7 @@ GLFWAPI int glfwGetInputMode(GLFWwindow* window, int mode);
  *
  *  @ingroup input
  */
-GLFWAPI void glfwSetInputMode(GLFWwindow* window, int mode, int value);
+GLFWAPI void glfwSetInputMode(GLFWwindow* window, int cameraRotationMode, int value);
 
 /*! @brief Returns whether raw mouse motion is supported.
  *
@@ -4272,7 +4272,7 @@ GLFWAPI int glfwGetKeyScancode(int key);
  *  `GLFW_RELEASE`.  The higher-level action `GLFW_REPEAT` is only reported to
  *  the key callback.
  *
- *  If the @ref GLFW_STICKY_KEYS input mode is enabled, this function returns
+ *  If the @ref GLFW_STICKY_KEYS input cameraRotationMode is enabled, this function returns
  *  `GLFW_PRESS` the first time you call it for a key that was pressed, even if
  *  that key has already been released.
  *
@@ -4311,7 +4311,7 @@ GLFWAPI int glfwGetKey(GLFWwindow* window, int key);
  *  to the specified window.  The returned state is one of `GLFW_PRESS` or
  *  `GLFW_RELEASE`.
  *
- *  If the @ref GLFW_STICKY_MOUSE_BUTTONS input mode is enabled, this function
+ *  If the @ref GLFW_STICKY_MOUSE_BUTTONS input cameraRotationMode is enabled, this function
  *  returns `GLFW_PRESS` the first time you call it for a mouse button that was
  *  pressed, even if that mouse button has already been released.
  *
@@ -4380,11 +4380,11 @@ GLFWAPI void glfwGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
  *  input focus when this function is called, it fails silently.
  *
  *  __Do not use this function__ to implement things like camera controls.  GLFW
- *  already provides the `GLFW_CURSOR_DISABLED` cursor mode that hides the
+ *  already provides the `GLFW_CURSOR_DISABLED` cursor cameraRotationMode that hides the
  *  cursor, transparently re-centers it and provides unconstrained cursor
  *  motion.  See @ref glfwSetInputMode for more information.
  *
- *  If the cursor mode is `GLFW_CURSOR_DISABLED` then the cursor position is
+ *  If the cursor cameraRotationMode is `GLFW_CURSOR_DISABLED` then the cursor position is
  *  unconstrained and limited only by the minimum and maximum values of
  *  a `double`.
  *
@@ -4397,7 +4397,7 @@ GLFWAPI void glfwGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
  *  @errors Possible errors include @ref GLFW_NOT_INITIALIZED and @ref
  *  GLFW_PLATFORM_ERROR.
  *
- *  @remark @wayland This function will only work when the cursor mode is
+ *  @remark @wayland This function will only work when the cursor cameraRotationMode is
  *  `GLFW_CURSOR_DISABLED`, otherwise it will do nothing.
  *
  *  @thread_safety This function must only be called from the main thread.
@@ -4479,7 +4479,7 @@ GLFWAPI GLFWcursor* glfwCreateStandardCursor(int shape);
  *  glfwTerminate.
  *
  *  If the specified cursor is current for any window, that window will be
- *  reverted to the default cursor.  This does not affect the cursor mode.
+ *  reverted to the default cursor.  This does not affect the cursor cameraRotationMode.
  *
  *  @param[in] cursor The cursor object to destroy.
  *
@@ -4503,7 +4503,7 @@ GLFWAPI void glfwDestroyCursor(GLFWcursor* cursor);
  *
  *  This function sets the cursor image to be used when the cursor is over the
  *  content area of the specified window.  The set cursor will only be visible
- *  when the [cursor mode](@ref cursor_mode) of the window is
+ *  when the [cursor cameraRotationMode](@ref cursor_mode) of the window is
  *  `GLFW_CURSOR_NORMAL`.
  *
  *  On some platforms, the set cursor may not be visible unless the window also
@@ -5543,7 +5543,7 @@ GLFWAPI void glfwSwapBuffers(GLFWwindow* window);
  *  without a current context will cause a @ref GLFW_NO_CURRENT_CONTEXT error.
  *
  *  This function does not apply to Vulkan.  If you are rendering with Vulkan,
- *  see the present mode of your swapchain instead.
+ *  see the present cameraRotationMode of your swapchain instead.
  *
  *  @param[in] interval The minimum number of screen updates to wait for
  *  until the buffers are swapped by @ref glfwSwapBuffers.

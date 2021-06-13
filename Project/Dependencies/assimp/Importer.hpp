@@ -613,7 +613,7 @@ public:
     void GetMemoryRequirements(aiMemoryInfo& in) const;
 
     // -------------------------------------------------------------------
-    /** Enables "extra verbose" mode.
+    /** Enables "extra verbose" cameraRotationMode.
      *
      * 'Extra verbose' means the data structure is validated after *every*
      * single post processing step to make sure everyone modifies the data

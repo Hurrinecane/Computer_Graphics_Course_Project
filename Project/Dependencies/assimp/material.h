@@ -105,7 +105,7 @@ enum aiTextureOp
 // ---------------------------------------------------------------------------
 /** @brief Defines how UV coordinates outside the [0...1] range are handled.
  *
- *  Commonly referred to as 'wrapping mode'.
+ *  Commonly referred to as 'wrapping cameraRotationMode'.
  */
 enum aiTextureMapMode
 {
@@ -1548,7 +1548,7 @@ ASSIMP_API unsigned int aiGetMaterialTextureCount(const C_STRUCT aiMaterial* pMa
  *     the texture (for the textures stored in the corresponding scene) which
  *     can be converted to an int using a function like atoi.
  *     This parameter must be non-null.
- *  @param mapping The texture mapping mode to be used.
+ *  @param mapping The texture mapping cameraRotationMode to be used.
  *      Pass NULL if you're not interested in this information.
  *  @param[out] uvindex For UV-mapped textures: receives the index of the UV
  *      source channel. Unmodified otherwise.

@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/vector_angle.hpp>
 
 
 #include <filesystem>
@@ -17,6 +18,8 @@
 #include "Camera.h"
 #include "Model.h"
 #include "Light.h"
+
+//ctrl+m ctrl +l
 
 typedef unsigned char byte;
 #define SCR_WIDTH 1920
@@ -49,7 +52,7 @@ Camera camera(glm::vec3(-1.5f, 0.2f, 0.8f), glm::vec3(0.f, 1.0f, 0.f), -30, 0);
 Light* flashLight, * sunLight;
 bool wireframeMode = false, boxMode = false, cameraRotationMode = false;
 bool mouseLeftPress, mouseRightPress, mouseMiddlePress;
-bool meteorAlarm = false, meteorCollide = false, ISScolapse = false;
+bool meteorAlarm = false, meteorEarthCollide = false, meteorMoonCollide = false, ISScolapse = false;
 float cameraAngleX, cameraAngleY;
 double mouseX = SCR_WIDTH / 2, mouseY = SCR_HEIGHT / 2, mouseXtmp = 0, mouseYtmp = 0;
 
@@ -79,7 +82,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* win = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "OpenGL Window", NULL, NULL);
+	GLFWwindow* win = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Earth3D", NULL, NULL);
 	if (win == NULL)
 	{
 		std::cout << "Error. Couldn't create window!" << std::endl;
@@ -166,10 +169,11 @@ int main()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorbuffers[i], 0);
 
-		// Также проверяем, готовы ли фреймбуферы (буфер глубины нам не нужен)
+		// Также проверяем, готовы ли фреймбуферы
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			std::cout << "Framebuffer not complete!" << std::endl;
 	}
+
 	const unsigned int SHADOW_WIDTH = 4096, SHADOW_HEIGHT = 4096;
 	unsigned int depthMapFBO;
 	glGenFramebuffers(1, &depthMapFBO);
@@ -188,7 +192,11 @@ int main()
 
 	// Прикрепляем текстуру глубины в качестве буфера глубины для FBO
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer not complete!" << std::endl;
+
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -209,15 +217,15 @@ int main()
 		1.0f, 0.f, 0.0f);
 	lights.push_back(sunLight);
 
-	flashLight = new Light("FlashLight", true);
-	flashLight->initLikeSpotLight(
-		glm::vec3(0.0f, 0.0f, 0.0f),	//position
-		glm::vec3(0.0f, 0.0f, 0.0f),	//direction
-		glm::radians(5.f),
-		glm::vec3(0.f, 0.f, 0.f),		//ambient
-		glm::vec3(0.3f, 0.3f, 0.1f),	//diffuse
-		glm::vec3(0.8f, 0.8f, 0.6f),	//specular
-		1.0f, 0.1f, 0.09f);
+	//flashLight = new Light("FlashLight", true);
+	//flashLight->initLikeSpotLight(
+	//	glm::vec3(0.0f, 0.0f, 0.0f),	//position
+	//	glm::vec3(0.0f, 0.0f, 0.0f),	//direction
+	//	glm::radians(5.f),
+	//	glm::vec3(0.f, 0.f, 0.f),		//ambient
+	//	glm::vec3(0.3f, 0.3f, 0.1f),	//diffuse
+	//	glm::vec3(0.8f, 0.8f, 0.6f),	//specular
+	//	1.0f, 0.1f, 0.09f);
 	//lights.push_back(flashLight);
 
 	ModelTransform lightTrans = {
@@ -321,7 +329,6 @@ int main()
 	shaderBloomFinal->setInt("bloomBlur", 1);
 #pragma endregion
 
-
 	double oldTime = glfwGetTime(), newTime, deltaTime;
 	while (!glfwWindowShouldClose(win))
 	{
@@ -332,14 +339,14 @@ int main()
 
 		processInput(win, deltaTime);
 
-		flashLight->position = camera.Position - camera.Up * 0.01f;
-		flashLight->direction = camera.Front;
+		//flashLight->position = camera.Position - camera.Up * 0.01f;
+		//flashLight->direction = camera.Front;
 
 		ISSTrans.rotation.x >= 360 ? ISSTrans.rotation.x -= 360 - 0.05f : ISSTrans.rotation.x += 0.05f;
 
 		moonTrans.position.x = 1.f * cosf(float(newTime));
 		moonTrans.position.z = 1.f * sinf(float(newTime));
-		moonTrans.rotation.y >= 360 ? moonTrans.rotation.y -= 360 - 0.05f : moonTrans.rotation.y += 0.05f;
+		moonTrans.rotation.y >= 360 ? moonTrans.rotation.y -= 360 - 0.1f : moonTrans.rotation.y += 0.1f;
 
 
 		earthTrans.rotation.y >= 360 ? earthTrans.rotation.y -= 360 - 0.1f : earthTrans.rotation.y += 0.1f;
@@ -347,23 +354,28 @@ int main()
 		if (meteorAlarm)
 		{
 			static glm::vec3 tmpPosition;
-			if (!meteorCollide)
+
+			if (!meteorEarthCollide && !meteorMoonCollide)
 			{
-				if (glm::length(meteorTrans.position - earthTrans.position) < 0.05f + 0.42f || glm::length(meteorTrans.position - moonTrans.position) < 0.22f + 0.05f)
-				{
-					cout << glm::length(meteorTrans.position - earthTrans.position) << " " << glm::length(meteorTrans.position - moonTrans.position) << endl;
-					tmpPosition = meteorTrans.position;
-					meteorCollide = true;
-				}
-				if (glm::length(meteorTrans.position - ISSTrans.position) < 0.05f + 0.1f)
+				if (glm::length(meteorTrans.position - ISSTrans.position) < 0.05f + 0.1f) // ISS colide
 				{
 					ISScolapse = true;
 					direction = (meteorTrans.position - earthTrans.position);
 					meteorTrans.position -= direction * (float)deltaTime * 0.1f;
 				}
+				else if (glm::length(meteorTrans.position - earthTrans.position) < 0.05f + 0.45f) // Earth colide
+				{
+					meteorTrans.rotation.y = 0.f;				
+					meteorEarthCollide = true;
+				}
+				else if(glm::length(meteorTrans.position - moonTrans.position) < 0.22f + 0.05f) // Moon colide
+				{
+					meteorTrans.rotation.y = 0.f;
+					meteorTrans.position -= moonTrans.position;
+					meteorMoonCollide = true;
+				}
 				else
 				{
-
 					direction = (meteorTrans.position - ISSTrans.position);
 					meteorTrans.position -= direction * (float)deltaTime * 0.5f;
 				}
@@ -373,13 +385,10 @@ int main()
 			}
 			else
 			{
-				meteorTrans.position.x = 0.42f * sinf(earthTrans.rotation.y / 180 * glm::pi<float>());
-				meteorTrans.position.z = 0.42f * cosf(earthTrans.rotation.y / 180 * glm::pi<float>());
-				cout << meteorTrans.position.x << " " << meteorTrans.position.z << endl;
-				meteorTrans.rotation = earthTrans.rotation;
+				//meteorTrans.position.x = 0.42f * sinf(earthTrans.rotation.y / 180 * glm::pi<float>());
+				//meteorTrans.position.z = 0.42f * cosf(earthTrans.rotation.y / 180 * glm::pi<float>());
+				meteorTrans.rotation.y >= 360 ? meteorTrans.rotation.y -= 360 - 0.1f : meteorTrans.rotation.y += 0.1f;
 			}
-
-
 		}
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -626,13 +635,36 @@ int main()
 
 			if (!boxMode)
 				earth.Draw(model_shader);
+
+			// DRAWING METEORITE
 			if (meteorAlarm)
 			{
+
 				model = glm::mat4(1.0f);
-				model = glm::translate(model, meteorTrans.position);
-				model = glm::rotate(model, glm::radians(meteorTrans.rotation.x), glm::vec3(1.f, 0.f, 0.f));
-				model = glm::rotate(model, glm::radians(meteorTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
-				model = glm::rotate(model, glm::radians(meteorTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
+				if (meteorEarthCollide)
+				{
+					model = glm::rotate(model, glm::radians(meteorTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
+					model = glm::translate(model, meteorTrans.position);
+					model = glm::rotate(model, glm::radians(earthTrans.rotation.x), glm::vec3(1.f, 0.f, 0.f));
+					model = glm::rotate(model, glm::radians(earthTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
+					model = glm::rotate(model, glm::radians(earthTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
+				}
+				else if (meteorMoonCollide)
+				{
+					model = glm::translate(model, moonTrans.position);
+					model = glm::rotate(model, glm::radians(meteorTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
+					model = glm::translate(model, meteorTrans.position);
+					model = glm::rotate(model, glm::radians(earthTrans.rotation.x), glm::vec3(1.f, 0.f, 0.f));
+					model = glm::rotate(model, glm::radians(earthTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
+					model = glm::rotate(model, glm::radians(earthTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
+				}
+				else if (!meteorEarthCollide || !meteorMoonCollide)
+				{
+					model = glm::translate(model, meteorTrans.position);
+					model = glm::rotate(model, glm::radians(meteorTrans.rotation.x), glm::vec3(1.f, 0.f, 0.f));
+					model = glm::rotate(model, glm::radians(meteorTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
+					model = glm::rotate(model, glm::radians(meteorTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
+				}
 				model = glm::scale(model, meteorTrans.scale);
 
 				model_shader->setMatrix4F("model", model);
@@ -804,7 +836,8 @@ void OnKeyAction(GLFWwindow* win, int key, int scancode, int action, int mods)
 			} while (glm::length(meteorTrans.position - earthTrans.position) < 0.05f + 0.45f + .5f
 				|| glm::length(meteorTrans.position - moonTrans.position) < 0.05f + 0.22f + .5f);
 			meteorAlarm = true;
-			meteorCollide = false;
+			meteorEarthCollide = false;
+			meteorMoonCollide = false;
 			ISScolapse = false;
 			break;
 		}

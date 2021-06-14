@@ -77,38 +77,9 @@ float ShadowCalculation(vec3 fragPos, int i){
     // ѕолучаем вектор между положением фрагмента и положением источника света
     vec3 fragToLight = fragPos - light[i].position;
 	
-    // »спользуем полученный вектор дл€ выборки из карты глубины    
-    // float closestDepth = texture(depthMap, fragToLight).r;
-	
-    // ¬ данный момент значени€ лежат в диапазоне [0,1]. ѕреобразуем их обратно к исходным значени€м
-    // closestDepth *= far_plane;
-	
     // “еперь получим текущую линейную глубину как длину между фрагментом и положением источника света
     float currentDepth = length(fragToLight);
 	
-    // “еперь проводим проверку на нахождение в тени
-    // float bias = 0.05; // мы используем гораздо большее теневое смещение, так как значение глубины теперь находитс€ в диапазоне [near_plane, far_plane]
-    // float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
-	
-    // PCF
-    // float shadow = 0.0;
-    // float bias = 0.05; 
-    // float samples = 4.0;
-    // float offset = 0.1;
-    // for(float x = -offset; x < offset; x += offset / (samples * 0.5))
-    // {
-        // for(float y = -offset; y < offset; y += offset / (samples * 0.5))
-        // {
-            // for(float z = -offset; z < offset; z += offset / (samples * 0.5))
-            // {
-                // float closestDepth = texture(depthMap, fragToLight + vec3(x, y, z)).r; // используем lightdir дл€ осмотра кубической карты
-                // closestDepth *= far_plane;   // Undo mapping [0;1]
-                // if(currentDepth - bias > closestDepth)
-                    // shadow += 1.0;
-            // }
-        // }
-    // }
-    // shadow /= (samples * samples * samples);
     float shadow = 0.0;
     float bias = 0.15;
     int samples = 20;
@@ -122,9 +93,6 @@ float ShadowCalculation(vec3 fragPos, int i){
             shadow += 1.0;
     }
     shadow /= float(samples);
-        
-    // ќтладка - отображение значений переменной  closestDepth (дл€ визуализации кубической карты глубины)
-    // FragColor = vec4(vec3(closestDepth / far_plane), 1.0);    
         
     return shadow;
 }

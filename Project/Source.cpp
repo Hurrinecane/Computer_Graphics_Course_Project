@@ -203,35 +203,24 @@ int main()
 
 #pragma endregion
 
-#pragma region LIGHT INITIALIZATION
+#pragma region SHADERS INITIALIZATION
+	Shader* basic_shader = new Shader("shaders/basic.vert", "shaders/basic.frag");
+	Shader* light_shader = new Shader("shaders/light.vert", "shaders/light.frag");
+	Shader* model_shader = new Shader("shaders/model.vert", "shaders/model.frag");
+	Shader* model_exp_shader = new Shader("shaders/model.vert", "shaders/model_exp.frag", "shaders/explode.geom");
+	Shader* skybox_shader = new Shader("shaders/skybox.vert", "shaders/skybox.frag");
+	Shader* shaderBlur = new Shader("shaders/blur.vert", "shaders/blur.frag");
+	Shader* shaderBloomFinal = new Shader("shaders/bloom_final.vert", "shaders/bloom_final.frag");
+	Shader* simpleDepthShader = new Shader("shaders/point_shadows_depth.vert", "shaders/point_shadows_depth.frag", "shaders/point_shadows_depth.geom");
 
-	vector<Light*> lights;
-	int active_lights = 0;
-
-	sunLight = new Light("Sun", true);
-	sunLight->initLikePointLight(
-		glm::vec3(-10.f, 4.90f, -4.90f),	//position
-		glm::vec3(0.001f, 0.001f, 0.001f),	//ambient
-		glm::vec3(0.9f, 0.9f, .8f),			//diffuse
-		glm::vec3(0.0f, 0.0f, 0.0f),		//specular
-		1.0f, 0.f, 0.0f);
-	lights.push_back(sunLight);
-
-	//flashLight = new Light("FlashLight", true);
-	//flashLight->initLikeSpotLight(
-	//	glm::vec3(0.0f, 0.0f, 0.0f),	//position
-	//	glm::vec3(0.0f, 0.0f, 0.0f),	//direction
-	//	glm::radians(5.f),
-	//	glm::vec3(0.f, 0.f, 0.f),		//ambient
-	//	glm::vec3(0.3f, 0.3f, 0.1f),	//diffuse
-	//	glm::vec3(0.8f, 0.8f, 0.6f),	//specular
-	//	1.0f, 0.1f, 0.09f);
-	//lights.push_back(flashLight);
-
-	ModelTransform lightTrans = {
-	glm::vec3(0.f, 0.f, 0.f),			// position
-	glm::vec3(0.f, 0.f, 0.f),			// rotation
-	glm::vec3(.5f, .5f, .5f) };			// scale
+	basic_shader->use();
+	basic_shader->setInt("ourTexture", 0);
+	basic_shader->setInt("depthMap", 1);
+	shaderBlur->use();
+	shaderBlur->setInt("image", 0);
+	shaderBloomFinal->use();
+	shaderBloomFinal->setInt("scene", 0);
+	shaderBloomFinal->setInt("bloomBlur", 1);
 #pragma endregion
 
 #pragma region OBJECTS INITIALIZATION
@@ -309,24 +298,35 @@ int main()
 	unsigned int cubemapTexture = loadCubemap(skyboxTexFaces);
 #pragma endregion
 
-#pragma region SHADERS INITIALIZATION
-	Shader* basic_shader = new Shader("shaders/basic.vert", "shaders/basic.frag");
-	Shader* light_shader = new Shader("shaders/light.vert", "shaders/light.frag");
-	Shader* model_shader = new Shader("shaders/model.vert", "shaders/model.frag");
-	Shader* model_exp_shader = new Shader("shaders/model.vert", "shaders/model_exp.frag", "shaders/explode.geom");
-	Shader* skybox_shader = new Shader("shaders/skybox.vert", "shaders/skybox.frag");
-	Shader* shaderBlur = new Shader("shaders/blur.vert", "shaders/blur.frag");
-	Shader* shaderBloomFinal = new Shader("shaders/bloom_final.vert", "shaders/bloom_final.frag");
-	Shader* simpleDepthShader = new Shader("shaders/point_shadows_depth.vert", "shaders/point_shadows_depth.frag", "shaders/point_shadows_depth.geom");
+#pragma region LIGHT INITIALIZATION
 
-	basic_shader->use();
-	basic_shader->setInt("ourTexture", 0);
-	basic_shader->setInt("depthMap", 1);
-	shaderBlur->use();
-	shaderBlur->setInt("image", 0);
-	shaderBloomFinal->use();
-	shaderBloomFinal->setInt("scene", 0);
-	shaderBloomFinal->setInt("bloomBlur", 1);
+	vector<Light*> lights;
+	int active_lights = 0;
+
+	sunLight = new Light("Sun", true);
+	sunLight->initLikePointLight(
+		glm::vec3(-10.f, 4.90f, -4.90f),	//position
+		glm::vec3(0.001f, 0.001f, 0.001f),	//ambient
+		glm::vec3(0.9f, 0.9f, .8f),			//diffuse
+		glm::vec3(0.0f, 0.0f, 0.0f),		//specular
+		1.0f, 0.f, 0.0f);
+	lights.push_back(sunLight);
+
+	//flashLight = new Light("FlashLight", true);
+	//flashLight->initLikeSpotLight(
+	//	glm::vec3(0.0f, 0.0f, 0.0f),	//position
+	//	glm::vec3(0.0f, 0.0f, 0.0f),	//direction
+	//	glm::radians(5.f),
+	//	glm::vec3(0.f, 0.f, 0.f),		//ambient
+	//	glm::vec3(0.3f, 0.3f, 0.1f),	//diffuse
+	//	glm::vec3(0.8f, 0.8f, 0.6f),	//specular
+	//	1.0f, 0.1f, 0.09f);
+	//lights.push_back(flashLight);
+
+	ModelTransform lightTrans = {
+	glm::vec3(0.f, 0.f, 0.f),			// position
+	glm::vec3(0.f, 0.f, 0.f),			// rotation
+	glm::vec3(.5f, .5f, .5f) };			// scale
 #pragma endregion
 
 	double oldTime = glfwGetTime(), newTime, deltaTime;
@@ -353,8 +353,6 @@ int main()
 
 		if (meteorAlarm)
 		{
-			static glm::vec3 tmpPosition;
-
 			if (!meteorEarthCollide && !meteorMoonCollide)
 			{
 				if (glm::length(meteorTrans.position - ISSTrans.position) < 0.05f + 0.1f) // ISS colide
@@ -365,10 +363,10 @@ int main()
 				}
 				else if (glm::length(meteorTrans.position - earthTrans.position) < 0.05f + 0.45f) // Earth colide
 				{
-					meteorTrans.rotation.y = 0.f;				
+					meteorTrans.rotation.y = 0.f;
 					meteorEarthCollide = true;
 				}
-				else if(glm::length(meteorTrans.position - moonTrans.position) < 0.22f + 0.05f) // Moon colide
+				else if (glm::length(meteorTrans.position - moonTrans.position) < 0.22f + 0.05f) // Moon colide
 				{
 					meteorTrans.rotation.y = 0.f;
 					meteorTrans.position -= moonTrans.position;
@@ -384,11 +382,7 @@ int main()
 				meteorTrans.rotation.z >= 360 ? meteorTrans.rotation.z -= 360 - 0.10f : meteorTrans.rotation.z += 0.10f;
 			}
 			else
-			{
-				//meteorTrans.position.x = 0.42f * sinf(earthTrans.rotation.y / 180 * glm::pi<float>());
-				//meteorTrans.position.z = 0.42f * cosf(earthTrans.rotation.y / 180 * glm::pi<float>());
 				meteorTrans.rotation.y >= 360 ? meteorTrans.rotation.y -= 360 - 0.1f : meteorTrans.rotation.y += 0.1f;
-			}
 		}
 
 		glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -639,24 +633,17 @@ int main()
 			// DRAWING METEORITE
 			if (meteorAlarm)
 			{
-
 				model = glm::mat4(1.0f);
 				if (meteorEarthCollide)
 				{
 					model = glm::rotate(model, glm::radians(meteorTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
 					model = glm::translate(model, meteorTrans.position);
-					model = glm::rotate(model, glm::radians(earthTrans.rotation.x), glm::vec3(1.f, 0.f, 0.f));
-					model = glm::rotate(model, glm::radians(earthTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
-					model = glm::rotate(model, glm::radians(earthTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
 				}
 				else if (meteorMoonCollide)
 				{
 					model = glm::translate(model, moonTrans.position);
 					model = glm::rotate(model, glm::radians(meteorTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
 					model = glm::translate(model, meteorTrans.position);
-					model = glm::rotate(model, glm::radians(earthTrans.rotation.x), glm::vec3(1.f, 0.f, 0.f));
-					model = glm::rotate(model, glm::radians(earthTrans.rotation.y), glm::vec3(0.f, 1.f, 0.f));
-					model = glm::rotate(model, glm::radians(earthTrans.rotation.z), glm::vec3(0.f, 0.f, 1.f));
 				}
 				else if (!meteorEarthCollide || !meteorMoonCollide)
 				{

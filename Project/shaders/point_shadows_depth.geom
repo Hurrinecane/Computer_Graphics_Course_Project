@@ -19,5 +19,4 @@ void main()
         }    
         EndPrimitive();
     }
-} 
-
+}

@@ -116,12 +116,12 @@ int main()
 
 #pragma region BUFFERS INITIALIZATION
 
-	// Конфигурирование фреймбуферов (типа с плавающей точкой)
+	// ГЉГ®Г­ГґГЁГЈГіГ°ГЁГ°Г®ГўГ Г­ГЁГҐ ГґГ°ГҐГ©Г¬ГЎГіГґГҐГ°Г®Гў (ГІГЁГЇГ  Г± ГЇГ«Г ГўГ ГѕГ№ГҐГ© ГІГ®Г·ГЄГ®Г©)
 	unsigned int hdrFBO;
 	glGenFramebuffers(1, &hdrFBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 
-	// Создаем 2 цветовых фреймбуфера типа с плавающей точкой (первый - для обычного рендеринга, другой - для граничных значений яркости)
+	// Г‘Г®Г§Г¤Г ГҐГ¬ 2 Г¶ГўГҐГІГ®ГўГ»Гµ ГґГ°ГҐГ©Г¬ГЎГіГґГҐГ°Г  ГІГЁГЇГ  Г± ГЇГ«Г ГўГ ГѕГ№ГҐГ© ГІГ®Г·ГЄГ®Г© (ГЇГҐГ°ГўГ»Г© - Г¤Г«Гї Г®ГЎГ»Г·Г­Г®ГЈГ® Г°ГҐГ­Г¤ГҐГ°ГЁГ­ГЈГ , Г¤Г°ГіГЈГ®Г© - Г¤Г«Гї ГЈГ°Г Г­ГЁГ·Г­Г»Гµ Г§Г­Г Г·ГҐГ­ГЁГ© ГїГ°ГЄГ®Г±ГІГЁ)
 	unsigned int colorBuffers[2];
 	glGenTextures(2, colorBuffers);
 	for (unsigned int i = 0; i < 2; i++)
@@ -130,30 +130,30 @@ int main()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  //используем режим GL_CLAMP_TO_EDGE, т.к. в противном случае фильтр размытия производил бы выборку повторяющихся значений текстуры!
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);  //ГЁГ±ГЇГ®Г«ГјГ§ГіГҐГ¬ Г°ГҐГ¦ГЁГ¬ GL_CLAMP_TO_EDGE, ГІ.ГЄ. Гў ГЇГ°Г®ГІГЁГўГ­Г®Г¬ Г±Г«ГіГ·Г ГҐ ГґГЁГ«ГјГІГ° Г°Г Г§Г¬Г»ГІГЁГї ГЇГ°Г®ГЁГ§ГўГ®Г¤ГЁГ« ГЎГ» ГўГ»ГЎГ®Г°ГЄГі ГЇГ®ГўГІГ®Г°ГїГѕГ№ГЁГµГ±Гї Г§Г­Г Г·ГҐГ­ГЁГ© ГІГҐГЄГ±ГІГіГ°Г»!
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-		// Прикрепляем текстуру к фреймбуферу
+		// ГЏГ°ГЁГЄГ°ГҐГЇГ«ГїГҐГ¬ ГІГҐГЄГ±ГІГіГ°Гі ГЄ ГґГ°ГҐГ©Г¬ГЎГіГґГҐГ°Гі
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, colorBuffers[i], 0);
 	}
 
-	// Создаем и прикрепляем буфер глубины (рендербуфер)
+	// Г‘Г®Г§Г¤Г ГҐГ¬ ГЁ ГЇГ°ГЁГЄГ°ГҐГЇГ«ГїГҐГ¬ ГЎГіГґГҐГ° ГЈГ«ГіГЎГЁГ­Г» (Г°ГҐГ­Г¤ГҐГ°ГЎГіГґГҐГ°)
 	unsigned int rboDepth;
 	glGenRenderbuffers(1, &rboDepth);
 	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, SCR_WIDTH, SCR_HEIGHT);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
 
-	// Сообщаем OpenGL, какой прикрепленный цветовой буфер мы будем использовать для рендеринга
+	// Г‘Г®Г®ГЎГ№Г ГҐГ¬ OpenGL, ГЄГ ГЄГ®Г© ГЇГ°ГЁГЄГ°ГҐГЇГ«ГҐГ­Г­Г»Г© Г¶ГўГҐГІГ®ГўГ®Г© ГЎГіГґГҐГ° Г¬Г» ГЎГіГ¤ГҐГ¬ ГЁГ±ГЇГ®Г«ГјГ§Г®ГўГ ГІГј Г¤Г«Гї Г°ГҐГ­Г¤ГҐГ°ГЁГ­ГЈГ 
 	unsigned int attachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
 	glDrawBuffers(2, attachments);
 
-	// Проверяем готовность фреймбуфера
+	// ГЏГ°Г®ГўГҐГ°ГїГҐГ¬ ГЈГ®ГІГ®ГўГ­Г®Г±ГІГј ГґГ°ГҐГ©Г¬ГЎГіГґГҐГ°Г 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "Framebuffer not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// ping-pong-фреймбуфер для размытия
+	// ping-pong-ГґГ°ГҐГ©Г¬ГЎГіГґГҐГ° Г¤Г«Гї Г°Г Г§Г¬Г»ГІГЁГї
 	unsigned int pingpongFBO[2];
 	unsigned int pingpongColorbuffers[2];
 	glGenFramebuffers(2, pingpongFBO);
@@ -165,11 +165,11 @@ int main()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCR_WIDTH, SCR_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // используем режим GL_CLAMP_TO_EDGE, т.к. в противном случае фильтр размытия производил бы выборку повторяющихся значений текстуры!
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // ГЁГ±ГЇГ®Г«ГјГ§ГіГҐГ¬ Г°ГҐГ¦ГЁГ¬ GL_CLAMP_TO_EDGE, ГІ.ГЄ. Гў ГЇГ°Г®ГІГЁГўГ­Г®Г¬ Г±Г«ГіГ·Г ГҐ ГґГЁГ«ГјГІГ° Г°Г Г§Г¬Г»ГІГЁГї ГЇГ°Г®ГЁГ§ГўГ®Г¤ГЁГ« ГЎГ» ГўГ»ГЎГ®Г°ГЄГі ГЇГ®ГўГІГ®Г°ГїГѕГ№ГЁГµГ±Гї Г§Г­Г Г·ГҐГ­ГЁГ© ГІГҐГЄГ±ГІГіГ°Г»!
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongColorbuffers[i], 0);
 
-		// Также проверяем, готовы ли фреймбуферы
+		// Г’Г ГЄГ¦ГҐ ГЇГ°Г®ГўГҐГ°ГїГҐГ¬, ГЈГ®ГІГ®ГўГ» Г«ГЁ ГґГ°ГҐГ©Г¬ГЎГіГґГҐГ°Г»
 		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			std::cout << "Framebuffer not complete!" << std::endl;
 	}
@@ -178,7 +178,7 @@ int main()
 	unsigned int depthMapFBO;
 	glGenFramebuffers(1, &depthMapFBO);
 
-	// Создаем текстуру кубической карты глубины
+	// Г‘Г®Г§Г¤Г ГҐГ¬ ГІГҐГЄГ±ГІГіГ°Гі ГЄГіГЎГЁГ·ГҐГ±ГЄГ®Г© ГЄГ Г°ГІГ» ГЈГ«ГіГЎГЁГ­Г»
 	unsigned int depthCubemap;
 	glGenTextures(1, &depthCubemap);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
@@ -190,7 +190,7 @@ int main()
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	// Прикрепляем текстуру глубины в качестве буфера глубины для FBO
+	// ГЏГ°ГЁГЄГ°ГҐГЇГ«ГїГҐГ¬ ГІГҐГЄГ±ГІГіГ°Гі ГЈГ«ГіГЎГЁГ­Г» Гў ГЄГ Г·ГҐГ±ГІГўГҐ ГЎГіГґГҐГ°Г  ГЈГ«ГіГЎГЁГ­Г» Г¤Г«Гї FBO
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap, 0);
@@ -249,8 +249,8 @@ int main()
 	};
 
 	ModelTransform cubeTrans = {
-	glm::vec3(0.f, 0.f, 0.f),				// position
-	glm::vec3(0.f, 0.f, 0.f),				// rowatation
+	glm::vec3(0.f, 0.f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rowatation
 	glm::vec3(0.001f, 0.001f, 0.001f) };	// scale
 
 	unsigned int box_texture = loadTexture("res\\images\\box.png", true);
@@ -259,29 +259,29 @@ int main()
 
 	ModelTransform ISSTrans = {
 	glm::vec3(-0.45f, 0.3f, 0.f),		// position
-	glm::vec3(0.f, 0.f, 90.f),			// rotation
+	glm::vec3(0.f, 0.f, 90.f),		// rotation
 	glm::vec3(0.01f, 0.01f, 0.01f) };	// scale
 
 	Model moon("res/models/moon/moon.obj", true);
 
 	moonTrans = {
-	glm::vec3(0.f, 0.2f, 0.f),			// position
-	glm::vec3(0.f, 0.f, 0.f),			// rotation
+	glm::vec3(0.f, 0.2f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
 	glm::vec3(0.2f, 0.2f, 0.2f) };		// scale
 
 	//earth
 	Model earth("res/models/earth/earth.obj", true);
 
 	earthTrans = {
-	glm::vec3(0.f, 0.f, 0.f),			// position
-	glm::vec3(0.f, 0.f, -10.f),			// rotation
+	glm::vec3(0.f, 0.f, 0.f),		// position
+	glm::vec3(0.f, 0.f, -10.f),		// rotation
 	glm::vec3(0.1f, 0.1f, 0.1f) };		// scale
 
 	Model meteor("res/models/meteorite/meteoriteobj.obj", true);
 
 	meteorTrans = {
 	glm::vec3(-0.5f, 0.f, -0.5f),		// position
-	glm::vec3(0.f, 0.f, 0.f),			// rotation
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
 	glm::vec3(0.01f, 0.01f, 0.01f) };	// scale
 
 	glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
@@ -307,7 +307,7 @@ int main()
 	sunLight->initLikePointLight(
 		glm::vec3(-10.f, 4.90f, -4.90f),	//position
 		glm::vec3(0.001f, 0.001f, 0.001f),	//ambient
-		glm::vec3(0.9f, 0.9f, .8f),			//diffuse
+		glm::vec3(0.9f, 0.9f, .8f),		//diffuse
 		glm::vec3(0.0f, 0.0f, 0.0f),		//specular
 		1.0f, 0.f, 0.0f);
 	lights.push_back(sunLight);
@@ -317,16 +317,16 @@ int main()
 	//	glm::vec3(0.0f, 0.0f, 0.0f),	//position
 	//	glm::vec3(0.0f, 0.0f, 0.0f),	//direction
 	//	glm::radians(5.f),
-	//	glm::vec3(0.f, 0.f, 0.f),		//ambient
+	//	glm::vec3(0.f, 0.f, 0.f),	//ambient
 	//	glm::vec3(0.3f, 0.3f, 0.1f),	//diffuse
 	//	glm::vec3(0.8f, 0.8f, 0.6f),	//specular
 	//	1.0f, 0.1f, 0.09f);
 	//lights.push_back(flashLight);
 
 	ModelTransform lightTrans = {
-	glm::vec3(0.f, 0.f, 0.f),			// position
-	glm::vec3(0.f, 0.f, 0.f),			// rotation
-	glm::vec3(.5f, .5f, .5f) };			// scale
+	glm::vec3(0.f, 0.f, 0.f),		// position
+	glm::vec3(0.f, 0.f, 0.f),		// rotation
+	glm::vec3(.5f, .5f, .5f) };		// scale
 #pragma endregion
 
 	double oldTime = glfwGetTime(), newTime, deltaTime;
@@ -361,7 +361,7 @@ int main()
 					direction = (meteorTrans.position - earthTrans.position);
 					meteorTrans.position -= direction * (float)deltaTime * 0.1f;
 				}
-				else if (glm::length(meteorTrans.position - earthTrans.position) < 0.05f + 0.45f) // Earth colide
+				else if (glm::length(meteorTrans.position - earthTrans.position) < 0.05f + 0.40f) // Earth colide
 				{
 					meteorTrans.rotation.y = 0.f;
 					meteorEarthCollide = true;
@@ -404,7 +404,7 @@ int main()
 			shadowTransforms.push_back(shadowProj * glm::lookAt(lights[i]->position, lights[i]->position + glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f)));
 		}
 
-		// Рендерим сцену в кубическую карту глубины
+		// ГђГҐГ­Г¤ГҐГ°ГЁГ¬ Г±Г¶ГҐГ­Гі Гў ГЄГіГЎГЁГ·ГҐГ±ГЄГіГѕ ГЄГ Г°ГІГі ГЈГ«ГіГЎГЁГ­Г»
 		glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -479,7 +479,7 @@ int main()
 #pragma endregion
 
 #pragma region NORMAL RENDERING 
-		// Рендерим сцену как обычно
+		// ГђГҐГ­Г¤ГҐГ°ГЁГ¬ Г±Г¶ГҐГ­Гі ГЄГ ГЄ Г®ГЎГ»Г·Г­Г®
 		glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 		glBindFramebuffer(GL_FRAMEBUFFER, hdrFBO);
 		glClearColor(0.2f, 0.2f, 0.2f, 1.f);
@@ -704,7 +704,7 @@ int main()
 #pragma endregion
 
 #pragma region FINAL RENDERING
-		// Размываем яркие фрагменты с помощью двухпроходного размытия по Гауссу
+		// ГђГ Г§Г¬Г»ГўГ ГҐГ¬ ГїГ°ГЄГЁГҐ ГґГ°Г ГЈГ¬ГҐГ­ГІГ» Г± ГЇГ®Г¬Г®Г№ГјГѕ Г¤ГўГіГµГЇГ°Г®ГµГ®Г¤Г­Г®ГЈГ® Г°Г Г§Г¬Г»ГІГЁГї ГЇГ® ГѓГ ГіГ±Г±Гі
 		bool horizontal = true, first_iteration = true;
 		unsigned int amount = 40;
 		shaderBlur->use();
@@ -712,7 +712,7 @@ int main()
 		{
 			glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
 			shaderBlur->setInt("horizontal", horizontal);
-			glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]);  // привязка текстуры другого фреймбуфера (или сцены, если это - первая итерация)
+			glBindTexture(GL_TEXTURE_2D, first_iteration ? colorBuffers[1] : pingpongColorbuffers[!horizontal]);  // ГЇГ°ГЁГўГїГ§ГЄГ  ГІГҐГЄГ±ГІГіГ°Г» Г¤Г°ГіГЈГ®ГЈГ® ГґГ°ГҐГ©Г¬ГЎГіГґГҐГ°Г  (ГЁГ«ГЁ Г±Г¶ГҐГ­Г», ГҐГ±Г«ГЁ ГЅГІГ® - ГЇГҐГ°ГўГ Гї ГЁГІГҐГ°Г Г¶ГЁГї)
 			renderQuad();
 			horizontal = !horizontal;
 			if (first_iteration)
@@ -723,7 +723,7 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-		// Теперь рендерим цветовой буфер (типа с плавающей точкой) на 2D-прямоугольник и сужаем диапазон значений HDR-цветов к цветовому диапазону значений заданного по умолчанию фреймбуфера
+		// Г’ГҐГЇГҐГ°Гј Г°ГҐГ­Г¤ГҐГ°ГЁГ¬ Г¶ГўГҐГІГ®ГўГ®Г© ГЎГіГґГҐГ° (ГІГЁГЇГ  Г± ГЇГ«Г ГўГ ГѕГ№ГҐГ© ГІГ®Г·ГЄГ®Г©) Г­Г  2D-ГЇГ°ГїГ¬Г®ГіГЈГ®Г«ГјГ­ГЁГЄ ГЁ Г±ГіГ¦Г ГҐГ¬ Г¤ГЁГ ГЇГ Г§Г®Г­ Г§Г­Г Г·ГҐГ­ГЁГ© HDR-Г¶ГўГҐГІГ®Гў ГЄ Г¶ГўГҐГІГ®ГўГ®Г¬Гі Г¤ГЁГ ГЇГ Г§Г®Г­Гі Г§Г­Г Г·ГҐГ­ГЁГ© Г§Г Г¤Г Г­Г­Г®ГЈГ® ГЇГ® ГіГ¬Г®Г«Г·Г Г­ГЁГѕ ГґГ°ГҐГ©Г¬ГЎГіГґГҐГ°Г 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shaderBloomFinal->use();
 		glActiveTexture(GL_TEXTURE0);
@@ -993,66 +993,66 @@ void renderCube()
 {
 	static unsigned int cubeVAO = 0;
 	static unsigned int cubeVBO = 0;
-	// Инициализация (если необходимо)
+	// Г€Г­ГЁГ¶ГЁГ Г«ГЁГ§Г Г¶ГЁГї (ГҐГ±Г«ГЁ Г­ГҐГ®ГЎГµГ®Г¤ГЁГ¬Г®)
 	if (cubeVAO == 0)
 	{
 		float vertices[] = {
-			// задняя грань
-		   -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // нижняя-левая
-			1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // верхняя-правая
-			1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // нижняя-правая         
-			1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // верхняя-правая
-		   -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // нижняя-левая
-		   -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // верхняя-левая
+			// Г§Г Г¤Г­ГїГї ГЈГ°Г Г­Гј
+		   -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-Г«ГҐГўГ Гї
+			1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-ГЇГ°Г ГўГ Гї
+			1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-ГЇГ°Г ГўГ Гї         
+			1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-ГЇГ°Г ГўГ Гї
+		   -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-Г«ГҐГўГ Гї
+		   -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-Г«ГҐГўГ Гї
 
-			// передняя грань
-		   -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // нижняя-левая
-			1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // нижняя-правая
-			1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // верхняя-правая
-			1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // верхняя-правая
-		   -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // верхняя-левая
-		   -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // нижняя-левая
+			// ГЇГҐГ°ГҐГ¤Г­ГїГї ГЈГ°Г Г­Гј
+		   -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-Г«ГҐГўГ Гї
+			1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-ГЇГ°Г ГўГ Гї
+			1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-ГЇГ°Г ГўГ Гї
+			1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-ГЇГ°Г ГўГ Гї
+		   -1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-Г«ГҐГўГ Гї
+		   -1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-Г«ГҐГўГ Гї
 
-			// грань слева
-		   -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // верхняя-правая
-		   -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // верхняя-левая
-		   -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // нижняя-левая
-		   -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // нижняя-левая
-		   -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // нижняя-правая
-		   -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // верхняя-правая
+			// ГЈГ°Г Г­Гј Г±Г«ГҐГўГ 
+		   -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // ГўГҐГ°ГµГ­ГїГї-ГЇГ°Г ГўГ Гї
+		   -1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-Г«ГҐГўГ Гї
+		   -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // Г­ГЁГ¦Г­ГїГї-Г«ГҐГўГ Гї
+		   -1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // Г­ГЁГ¦Г­ГїГї-Г«ГҐГўГ Гї
+		   -1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-ГЇГ°Г ГўГ Гї
+		   -1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // ГўГҐГ°ГµГ­ГїГї-ГЇГ°Г ГўГ Гї
 
-			// грань справа
-			1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // верхняя-левая
-			1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // нижняя-правая
-			1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // верхняя-правая         
-			1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // нижняя-правая
-			1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // верхняя-левая
-			1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // нижняя-левая     
+			// ГЈГ°Г Г­Гј Г±ГЇГ°Г ГўГ 
+			1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // ГўГҐГ°ГµГ­ГїГї-Г«ГҐГўГ Гї
+			1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // Г­ГЁГ¦Г­ГїГї-ГЇГ°Г ГўГ Гї
+			1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-ГЇГ°Г ГўГ Гї         
+			1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // Г­ГЁГ¦Г­ГїГї-ГЇГ°Г ГўГ Гї
+			1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // ГўГҐГ°ГµГ­ГїГї-Г«ГҐГўГ Гї
+			1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-Г«ГҐГўГ Гї     
 
-			// нижняя грань
-		   -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // верхняя-правая
-			1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // верхняя-левая
-			1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // нижняя-левая
-			1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // нижняя-левая
-		   -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // нижняя-правая
-		   -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // верхняя-правая
+			// Г­ГЁГ¦Г­ГїГї ГЈГ°Г Г­Гј
+		   -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-ГЇГ°Г ГўГ Гї
+			1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-Г«ГҐГўГ Гї
+			1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-Г«ГҐГўГ Гї
+			1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-Г«ГҐГўГ Гї
+		   -1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-ГЇГ°Г ГўГ Гї
+		   -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-ГЇГ°Г ГўГ Гї
 
-			// верхняя грань
-		   -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // верхняя-левая
-			1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // нижняя-правая
-			1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // верхняя-правая     
-			1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // нижняя-правая
-		   -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // верхняя-левая
-		   -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // нижняя-левая        
+			// ГўГҐГ°ГµГ­ГїГї ГЈГ°Г Г­Гј
+		   -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-Г«ГҐГўГ Гї
+			1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-ГЇГ°Г ГўГ Гї
+			1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-ГЇГ°Г ГўГ Гї     
+			1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // Г­ГЁГ¦Г­ГїГї-ГЇГ°Г ГўГ Гї
+		   -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // ГўГҐГ°ГµГ­ГїГї-Г«ГҐГўГ Гї
+		   -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // Г­ГЁГ¦Г­ГїГї-Г«ГҐГўГ Гї        
 		};
 		glGenVertexArrays(1, &cubeVAO);
 		glGenBuffers(1, &cubeVBO);
 
-		// Заполняем буфер
+		// Г‡Г ГЇГ®Г«Г­ГїГҐГ¬ ГЎГіГґГҐГ°
 		glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-		// Связываем вершинные атрибуты
+		// Г‘ГўГїГ§Г»ГўГ ГҐГ¬ ГўГҐГ°ГёГЁГ­Г­Г»ГҐ Г ГІГ°ГЁГЎГіГІГ»
 		glBindVertexArray(cubeVAO);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -1064,7 +1064,7 @@ void renderCube()
 		glBindVertexArray(0);
 	}
 
-	// Рендер ящика
+	// ГђГҐГ­Г¤ГҐГ° ГїГ№ГЁГЄГ 
 	glBindVertexArray(cubeVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);
@@ -1078,14 +1078,14 @@ void renderQuad()
 	if (quadVAO == 0)
 	{
 		float quadVertices[] = {
-			// координаты      // текстурные коодинаты
+			// ГЄГ®Г®Г°Г¤ГЁГ­Г ГІГ»      // ГІГҐГЄГ±ГІГіГ°Г­Г»ГҐ ГЄГ®Г®Г¤ГЁГ­Г ГІГ»
 		   -1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
 		   -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
 			1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
 			1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
 		};
 
-		// Установка VAO плоскости
+		// Г“Г±ГІГ Г­Г®ГўГЄГ  VAO ГЇГ«Г®Г±ГЄГ®Г±ГІГЁ
 		glGenVertexArrays(1, &quadVAO);
 		glGenBuffers(1, &quadVBO);
 		glBindVertexArray(quadVAO);
